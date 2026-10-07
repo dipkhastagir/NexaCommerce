@@ -1,0 +1,18 @@
+@model (int Page, int TotalPages, int TotalCount)
+@if (Model.TotalPages > 1)
+{
+    var start = Math.Max(1, Model.Page - 2);
+    var end = Math.Min(Model.TotalPages, start + 4);
+    start = Math.Max(1, end - 4);
+    <nav class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2" aria-label="Pagination">
+        <span class="small text-muted">Page @Model.Page of @Model.TotalPages &middot; @Model.TotalCount results</span>
+        <ul class="pagination pagination-sm mb-0">
+            <li class="page-item @(Model.Page <= 1 ? "disabled" : "")"><a class="page-link" href="@QueryHelper.With(Context.Request, "page", Model.Page - 1)">Previous</a></li>
+            @for (var i = start; i <= end; i++)
+            {
+                <li class="page-item @(i == Model.Page ? "active" : "")"><a class="page-link" href="@QueryHelper.With(Context.Request, "page", i)">@i</a></li>
+            }
+            <li class="page-item @(Model.Page >= Model.TotalPages ? "disabled" : "")"><a class="page-link" href="@QueryHelper.With(Context.Request, "page", Model.Page + 1)">Next</a></li>
+        </ul>
+    </nav>
+}

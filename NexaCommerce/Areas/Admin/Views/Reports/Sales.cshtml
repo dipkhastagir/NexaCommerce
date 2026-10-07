@@ -1,0 +1,56 @@
+@model SalesReportVm
+@{
+    ViewData["Title"] = "Sales report";
+    var labels = System.Text.Json.JsonSerializer.Serialize(Model.Daily.Select(d => d.SaleDate.ToString("dd MMM")));
+    var rev = System.Text.Json.JsonSerializer.Serialize(Model.Daily.Select(d => d.Revenue));
+    var payL = System.Text.Json.JsonSerializer.Serialize(Model.ByPayment.Select(p => p.Label));
+    var payV = System.Text.Json.JsonSerializer.Serialize(Model.ByPayment.Select(p => p.Revenue));
+}
+<div class="page-head">
+    <div><div class="crumbs"><a asp-action="Index">Reports</a> / Sales</div><h1>Sales report</h1><div class="sub">@Fmt.Date(Model.From) to @Fmt.Date(Model.To)</div></div>
+    <form method="get" class="d-flex gap-2 align-items-center no-print">
+        <input type="date" class="form-control form-control-sm" name="from" value="@Model.From.ToString("yyyy-MM-dd")" aria-label="From" />
+        <input type="date" class="form-control form-control-sm" name="to" value="@Model.To.ToString("yyyy-MM-dd")" aria-label="To" />
+        <button class="btn btn-ink btn-sm" type="submit">Run</button>
+        <button class="btn btn-ghost btn-sm" type="button" onclick="window.print()"><i class="bi bi-printer"></i></button>
+    </form>
+</div>
+<div class="row g-3 mb-3">
+    <div class="col-md-3"><div class="stat violet"><div class="lbl">Revenue</div><div class="val">@Fmt.MoneyShort(Model.Revenue)</div></div></div>
+    <div class="col-md-3"><div class="stat mint"><div class="lbl">Orders</div><div class="val">@Model.Orders</div></div></div>
+    <div class="col-md-3"><div class="stat"><div class="lbl">Average order</div><div class="val">@Fmt.Money(Model.AvgOrder)</div></div></div>
+    <div class="col-md-3"><div class="stat coral"><div class="lbl">Discounts given</div><div class="val">@Fmt.MoneyShort(Model.Discounts)</div></div></div>
+</div>
+<div class="row g-3 mb-3">
+    <div class="col-xl-8"><div class="panel"><div class="panel-title">Revenue per day</div><div class="chart-box"><canvas id="rev"></canvas></div></div></div>
+    <div class="col-xl-4"><div class="panel"><div class="panel-title">By payment method</div><div class="chart-box"><canvas id="pay"></canvas></div></div></div>
+</div>
+<div class="row g-3">
+    <div class="col-xl-7">
+        <div class="table-wrap"><div class="p-3 pb-2 fw-bold">Top 10 products</div>
+            <table class="table-nx"><thead><tr><th>#</th><th>Product</th><th class="text-end">Units</th><th class="text-end">Revenue</th><th class="text-end">Share</th></tr></thead>
+                <tbody>
+                    @{ var rank = 0; }
+                    @foreach (var t in Model.TopProducts)
+                    {
+                        rank++;
+                        <tr><td>@rank</td><td><a asp-controller="Products" asp-action="Details" asp-route-id="@t.ProductId">@t.ProductName</a></td><td class="text-end tabular">@t.Units</td><td class="text-end tabular">@Fmt.Money(t.Revenue)</td><td class="text-end tabular small">@(Model.Revenue == 0 ? "-" : (t.Revenue / Model.Revenue).ToString("P1"))</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="col-xl-5">
+        <div class="table-wrap"><div class="p-3 pb-2 fw-bold">By city</div>
+            <table class="table-nx"><thead><tr><th>City</th><th class="text-end">Orders</th><th class="text-end">Revenue</th></tr></thead>
+                <tbody>@foreach (var c in Model.ByCity) { <tr><td>@c.Label</td><td class="text-end tabular">@c.Orders</td><td class="text-end tabular">@Fmt.Money(c.Revenue)</td></tr> }</tbody>
+            </table>
+        </div>
+    </div>
+</div>
+@section Scripts {
+<script>
+    new Chart(document.getElementById('rev'), { type: 'line', data: { labels: @Html.Raw(labels), datasets: [{ label: 'Revenue', data: @Html.Raw(rev), borderColor: '#5B3DF5', backgroundColor: 'rgba(91,61,245,.12)', fill: true, tension: .3, pointRadius: 0 }] }, options: { plugins: { legend: { display: false } }, scales: { x: { grid: { display: false }, ticks: { maxTicksLimit: 10 } }, y: { beginAtZero: true } } } });
+    new Chart(document.getElementById('pay'), { type: 'doughnut', data: { labels: @Html.Raw(payL), datasets: [{ data: @Html.Raw(payV), backgroundColor: window.nxPalette, borderWidth: 0 }] }, options: { cutout: '60%', plugins: { legend: { position: 'bottom' } } } });
+</script>
+}

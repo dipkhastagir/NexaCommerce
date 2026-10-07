@@ -1,0 +1,17 @@
+@model List<ContactMessage>
+@{ ViewData["Title"] = "Messages"; }
+<div class="page-head"><div><h1>Customer messages</h1><div class="sub">Submitted through the storefront contact form.</div></div></div>
+@if (!Model.Any()) { <div class="panel empty"><i class="bi bi-envelope-open"></i>No messages.</div> }
+@foreach (var m in Model)
+{
+    <div class="panel mb-2" style="@(m.IsHandled ? "opacity:.65" : "")">
+        <div class="d-flex justify-content-between flex-wrap gap-2">
+            <div><b>@m.Subject</b><div class="small text-muted">@m.Name &lt;@m.Email&gt; &middot; @Fmt.Ago(m.CreatedAt)</div></div>
+            <div class="d-flex gap-2">
+                <a class="btn btn-ghost btn-sm" href="mailto:@m.Email?subject=Re: @m.Subject"><i class="bi bi-reply me-1"></i>Reply</a>
+                @if (!m.IsHandled) { <form asp-action="Handle" method="post"><input type="hidden" name="id" value="@m.MessageId" /><button class="btn btn-primary btn-sm" type="submit">Mark handled</button></form> }
+            </div>
+        </div>
+        <p class="mb-0 mt-2">@m.Body</p>
+    </div>
+}

@@ -1,0 +1,28 @@
+@model List<Category>
+@{ ViewData["Title"] = "Categories"; }
+<div class="page-head">
+    <div><h1>Categories</h1><div class="sub">Top-level categories appear in the store navigation; sub-categories roll up into their parent when shoppers filter.</div></div>
+    <a class="btn btn-primary btn-sm" asp-action="Create"><i class="bi bi-plus-lg me-1"></i>New category</a>
+</div>
+<div class="table-wrap"><div class="table-scroll">
+    <table class="table-nx">
+        <thead><tr><th>Category</th><th>Slug</th><th>Parent</th><th class="text-end">Products</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+            @foreach (var c in Model)
+            {
+                <tr>
+                    <td><div class="d-flex align-items-center gap-2"><span class="mini-thumb" style="background:@Visual.Tint(c.CategoryId);color:@Visual.Ink(c.CategoryId)"><i class="bi @c.Icon"></i></span><div class="lh-sm"><b>@c.Name</b><div class="small text-muted">@c.Description</div></div></div></td>
+                    <td class="small text-muted">/@c.Slug</td>
+                    <td class="small">@(c.ParentName ?? "-")</td>
+                    <td class="text-end tabular">@c.ProductCount</td>
+                    <td>@if (c.IsActive) { <span class="pill st-delivered">Active</span> } else { <span class="pill st-default">Hidden</span> }</td>
+                    <td class="text-end text-nowrap">
+                        <a class="btn btn-ghost btn-sm" asp-controller="Products" asp-action="Index" asp-route-category="@c.CategoryId" title="Products"><i class="bi bi-box-seam"></i></a>
+                        <a class="btn btn-ghost btn-sm" asp-action="Edit" asp-route-id="@c.CategoryId"><i class="bi bi-pencil"></i></a>
+                        <a class="btn btn-ghost btn-sm text-danger" asp-action="Delete" asp-route-id="@c.CategoryId"><i class="bi bi-trash"></i></a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div></div>

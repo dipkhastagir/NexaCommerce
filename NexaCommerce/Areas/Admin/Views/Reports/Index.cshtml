@@ -1,0 +1,7 @@
+@{ ViewData["Title"] = "Reports"; }
+<div class="page-head"><div><h1>Reports</h1><div class="sub">Built from SQL Server views and stored procedures, so figures match the database exactly.</div></div></div>
+<div class="row g-3">
+    <div class="col-md-4"><a class="intel-card" asp-action="Sales"><span class="ic"><i class="bi bi-graph-up"></i></span><b class="fs-5">Sales</b><p>Daily revenue, top products, payment methods and cities for any date range (sp_SalesReport).</p></a></div>
+    <div class="col-md-4"><a class="intel-card" asp-action="Inventory"><span class="ic"><i class="bi bi-boxes"></i></span><b class="fs-5">Inventory valuation</b><p>Units on hand, value at cost and at retail, by product and category.</p></a></div>
+    <div class="col-md-4"><a class="intel-card" asp-action="Products"><span class="ic"><i class="bi bi-trophy"></i></span><b class="fs-5">Product performance</b><p>Units sold, ratings, margin and stock position for every product.</p></a></div>
+</div>

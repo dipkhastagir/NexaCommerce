@@ -1,0 +1,60 @@
+@{
+    ViewData["Title"] = "REST API";
+    var endpoints = new[]
+    {
+        ("GET", "/api/products", "Public", "Search the catalog. Query: q, categoryId, brandId, minPrice, maxPrice, sort, page, pageSize."),
+        ("GET", "/api/products/{id}", "Public", "One product with price, stock status and ratings."),
+        ("POST", "/api/products", "Manager", "Create a product (JSON body matching the product form)."),
+        ("PUT", "/api/products/{id}", "Manager", "Update a product."),
+        ("DELETE", "/api/products/{id}", "Manager", "Delete, or archive when it has sales history."),
+        ("GET", "/api/categories", "Public", "Active categories with product counts."),
+        ("GET", "/api/categories/{id}/products", "Public", "Products in a category."),
+        ("POST", "/api/categories", "Manager", "Create a category."),
+        ("GET", "/api/orders", "Signed in", "Customers get their own orders; staff get every order."),
+        ("GET", "/api/orders/{id}", "Signed in", "Order with items, history and risk explanation."),
+        ("PUT", "/api/orders/{id}/status", "Staff", "Body: { \"status\": \"Shipped\", \"note\": \"...\" }."),
+        ("GET", "/api/intelligence/stats", "Staff", "Dashboard counters (same view the dashboard uses)."),
+        ("GET", "/api/intelligence/forecast/{productId}", "Manager", "Holt forecast with 95% interval and accuracy metrics."),
+        ("GET", "/api/intelligence/reorder", "Manager", "Safety stock, reorder point, EOQ and urgency per product."),
+        ("GET", "/api/intelligence/segments", "Manager", "RFM segment summary."),
+        ("GET", "/api/intelligence/basket-rules?take=50", "Manager", "Association rules sorted by lift."),
+        ("GET", "/api/intelligence/abc?days=90", "Manager", "ABC classification by revenue."),
+        ("GET", "/api/intelligence/recommendations/{productId}", "Public", "Frequently bought together for one product.")
+    };
+}
+<div class="page-head"><div><h1>REST API</h1><div class="sub">The JSON API calls the same service layer as these Razor pages, so a mobile app or research notebook sees exactly the same rules.</div></div></div>
+<div class="row g-3">
+    <div class="col-xl-8">
+        <div class="table-wrap"><table class="table-nx">
+            <thead><tr><th>Method</th><th>Endpoint</th><th>Access</th><th>Description</th></tr></thead>
+            <tbody>
+                @foreach (var e in endpoints)
+                {
+                    <tr>
+                        <td><span class="method m-@e.Item1.ToLower()">@e.Item1</span></td>
+                        <td>@if (e.Item1 == "GET" && !e.Item2.Contains('{')) { <a href="@e.Item2" target="_blank"><code>@e.Item2</code></a> } else { <code>@e.Item2</code> }</td>
+                        <td class="small">@e.Item3</td>
+                        <td class="small text-muted">@e.Item4</td>
+                    </tr>
+                }
+            </tbody>
+        </table></div>
+    </div>
+    <div class="col-xl-4">
+        <div class="panel mb-3">
+            <div class="panel-title">Authentication</div>
+            <p class="small text-muted">The API uses the same sign-in cookie as the website. Unauthenticated calls to protected endpoints return <code>401</code>; calls without the right role return <code>403</code>.</p>
+        </div>
+        <div class="panel">
+            <div class="panel-title">Try it from Python</div>
+<pre class="code-block mb-0">import requests, pandas as pd
+
+base = "https://localhost:7177"
+r = requests.get(f"{base}/api/products",
+                 params={"sort": "popular", "pageSize": 50},
+                 verify=False)
+df = pd.DataFrame(r.json()["items"])
+print(df[["sku", "name", "unitsSold"]].head())</pre>
+        </div>
+    </div>
+</div>

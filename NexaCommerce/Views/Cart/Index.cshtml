@@ -1,0 +1,86 @@
+@model CartVm
+@{ ViewData["Title"] = "Your cart"; }
+<div class="container py-3">
+    <h1 class="h2 mb-3">Your cart</h1>
+    @if (!Model.Items.Any())
+    {
+        <div class="panel empty"><i class="bi bi-bag"></i>Your cart is empty.<br /><a class="btn btn-primary mt-3" asp-controller="Shop" asp-action="Index">Start shopping</a></div>
+    }
+    else
+    {
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <div class="panel">
+                    @foreach (var i in Model.Items)
+                    {
+                        <div class="line-item">
+                            <span class="thumb" style="background:@Visual.Tint(i.ProductId);color:@Visual.Ink(i.ProductId)"><i class="bi @i.CategoryIcon"></i></span>
+                            <div class="flex-grow-1 min-w-0">
+                                <a class="fw-bold text-body" asp-controller="Shop" asp-action="Details" asp-route-id="@i.ProductId">@i.Name</a>
+                                <div class="small text-muted">@i.Sku &middot; @Fmt.Money(i.UnitPrice) each</div>
+                                @if (i.Quantity >= i.StockQuantity)
+                                {
+                                    <div class="small stock-low fw-semibold">That's all we have in stock.</div>
+                                }
+                            </div>
+                            <form asp-action="Update" method="post">
+                                <input type="hidden" name="productId" value="@i.ProductId" />
+                                <div class="input-group input-group-sm" style="width:120px" data-stepper data-autosubmit>
+                                    <button class="btn btn-ghost" type="button" data-step="-1" aria-label="Decrease">-</button>
+                                    <input class="form-control text-center" type="number" name="quantity" value="@i.Quantity" min="0" max="@i.StockQuantity" aria-label="Quantity" onchange="this.form.submit()" />
+                                    <button class="btn btn-ghost" type="button" data-step="1" aria-label="Increase">+</button>
+                                </div>
+                            </form>
+                            <div class="text-end" style="min-width:110px"><b class="tabular">@Fmt.Money(i.LineTotal)</b></div>
+                            <form asp-action="Remove" method="post">
+                                <input type="hidden" name="productId" value="@i.ProductId" />
+                                <button class="btn btn-link text-muted p-1" type="submit" aria-label="Remove @i.Name"><i class="bi bi-x-lg"></i></button>
+                            </form>
+                        </div>
+                    }
+                    <form asp-action="Clear" method="post" class="text-end mt-2" data-confirm="Remove every item from your cart?">
+                        <button class="btn btn-link btn-sm text-muted" type="submit">Empty cart</button>
+                    </form>
+                </div>
+
+                @if (Model.Suggestions.Any())
+                {
+                    <div class="together mt-3">
+                        <h2 class="h6 mb-3">Often added with what's in your cart</h2>
+                        <div class="row g-3">
+                            @foreach (var s in Model.Suggestions)
+                            {
+                                <div class="col-md-4">
+                                    <div class="d-flex gap-2 align-items-center">
+                                        <span class="thumb" style="background:@Visual.Tint(s.ConsequentId);color:@Visual.Ink(s.ConsequentId);width:48px;height:48px"><i class="bi @s.ConsequentIcon"></i></span>
+                                        <div class="lh-sm small">
+                                            <a class="fw-semibold" asp-controller="Shop" asp-action="Details" asp-route-id="@s.ConsequentId">@s.ConsequentName</a>
+                                            <div class="text-muted">@Fmt.Money(s.ConsequentPrice)</div>
+                                            <form asp-action="Add" method="post"><input type="hidden" name="productId" value="@s.ConsequentId" /><button class="btn btn-link btn-sm p-0" type="submit">+ Add</button></form>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+            <div class="col-lg-4">
+                <div class="panel">
+                    <h2 class="panel-title">Order summary</h2>
+                    <div class="summary-row"><span>Items (@Model.UnitCount)</span><span class="tabular">@Fmt.Money(Model.SubTotal)</span></div>
+                    <div class="summary-row"><span>Delivery</span><span class="tabular">@(Model.EffectiveShipping == 0 ? "Free" : Fmt.Money(Model.EffectiveShipping))</span></div>
+                    @if (Model.AmountToFreeShipping > 0)
+                    {
+                        <div class="small text-muted mt-2">Add @Fmt.Money(Model.AmountToFreeShipping) more for free delivery.</div>
+                        <div class="ship-meter"><span style="width:@((int)(100 * Model.SubTotal / Model.FreeShippingThreshold))%"></span></div>
+                    }
+                    <div class="summary-row total"><span>Total</span><span class="tabular">@Fmt.Money(Model.Total)</span></div>
+                    <p class="small text-muted mt-2 mb-3">Coupons are applied at checkout.</p>
+                    <a class="btn btn-primary w-100" asp-controller="Checkout" asp-action="Index">Go to checkout</a>
+                    <a class="btn btn-ghost w-100 mt-2" asp-controller="Shop" asp-action="Index">Keep shopping</a>
+                </div>
+            </div>
+        </div>
+    }
+</div>

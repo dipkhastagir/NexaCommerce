@@ -1,0 +1,18 @@
+@model List<ReturnRequest>
+@{ ViewData["Title"] = "Returns"; string status = ViewBag.Status; }
+<div class="page-head"><div><h1>Returns</h1><div class="sub">Requests from customers within the 30-day window.</div></div></div>
+<div class="tab-links">
+    <a asp-action="Index" class="@(string.IsNullOrEmpty(status) ? "active" : "")">All</a>
+    @foreach (var s in new[] { "Requested", "Approved", "Refunded", "Rejected" }) { <a asp-action="Index" asp-route-status="@s" class="@(status == s ? "active" : "")">@s</a> }
+</div>
+<div class="table-wrap"><table class="table-nx">
+    <thead><tr><th>#</th><th>Order</th><th>Customer</th><th>Reason</th><th>Opened</th><th>Status</th><th class="text-end">Refund</th></tr></thead>
+    <tbody>
+        @foreach (var r in Model)
+        {
+            <tr><td><a asp-action="Details" asp-route-id="@r.ReturnId" class="fw-bold">#@r.ReturnId</a></td><td><a asp-controller="Orders" asp-action="Details" asp-route-id="@r.OrderId">@r.OrderNumber</a></td><td>@r.CustomerName</td><td class="small text-muted" style="max-width:360px">@r.Reason</td><td class="small">@Fmt.Date(r.CreatedAt)</td><td><span class="pill @Badge.Generic(r.Status)">@r.Status</span></td><td class="text-end tabular">@(r.RefundAmount > 0 ? Fmt.Money(r.RefundAmount) : "-")</td></tr>
+        }
+    </tbody>
+</table>
+@if (!Model.Any()) { <div class="empty"><i class="bi bi-arrow-counterclockwise"></i>No returns.</div> }
+</div>

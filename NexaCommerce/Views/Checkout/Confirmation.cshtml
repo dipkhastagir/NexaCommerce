@@ -1,0 +1,24 @@
+@model OrderConfirmationVm
+@{
+    var o = Model.Order;
+    ViewData["Title"] = "Order placed";
+}
+<div class="container py-4" style="max-width:760px">
+    <div class="panel text-center py-5">
+        <div class="mx-auto mb-3 d-grid" style="width:64px;height:64px;border-radius:50%;background:var(--mint-soft);place-items:center"><i class="bi bi-check-lg fs-2" style="color:var(--mint)"></i></div>
+        <h1 class="h3">Thanks, your order is in.</h1>
+        <p class="text-muted mb-1">Order <b>@o.OrderNumber</b> &middot; @Fmt.Money(o.TotalAmount) &middot; @o.ItemCount items</p>
+        @if (!string.IsNullOrEmpty(Model.PaymentMessage))
+        {
+            <p class="mb-0"><span class="pill @Badge.Payment(o.PaymentStatus)">@o.PaymentStatus</span> <span class="small text-muted ms-1">@Model.PaymentMessage</span></p>
+        }
+        <div class="d-flex justify-content-center gap-2 mt-4">
+            <a class="btn btn-primary" asp-controller="MyOrders" asp-action="Track" asp-route-id="@o.OrderId">Track order</a>
+            <a class="btn btn-ghost" asp-controller="Shop" asp-action="Index">Continue shopping</a>
+        </div>
+    </div>
+    <div class="panel mt-3">
+        <h2 class="panel-title">Delivering to</h2>
+        <p class="mb-0">@o.ShipName, @o.ShipPhone<br />@o.ShipAddress, @o.ShipCity</p>
+    </div>
+</div>

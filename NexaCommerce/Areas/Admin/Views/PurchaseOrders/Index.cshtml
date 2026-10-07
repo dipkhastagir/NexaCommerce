@@ -1,0 +1,29 @@
+@model List<PurchaseOrder>
+@{ ViewData["Title"] = "Purchase orders"; string status = ViewBag.Status; }
+<div class="page-head"><div><h1>Purchase orders</h1><div class="sub">Receiving a PO adds stock, updates cost price and writes PURCHASE entries to the ledger in one transaction.</div></div><a class="btn btn-primary btn-sm" asp-action="Create"><i class="bi bi-plus-lg me-1"></i>New purchase order</a></div>
+<div class="tab-links">
+    <a asp-action="Index" class="@(string.IsNullOrEmpty(status) ? "active" : "")">All</a>
+    @foreach (var s in new[] { "Draft", "Ordered", "Received", "Cancelled" }) { <a asp-action="Index" asp-route-status="@s" class="@(status == s ? "active" : "")">@s</a> }
+</div>
+<div class="table-wrap"><div class="table-scroll">
+    <table class="table-nx">
+        <thead><tr><th>PO number</th><th>Supplier</th><th>Warehouse</th><th>Ordered</th><th>Expected</th><th class="text-end">Lines</th><th class="text-end">Total</th><th>Status</th></tr></thead>
+        <tbody>
+            @foreach (var po in Model)
+            {
+                <tr>
+                    <td><a asp-action="Details" asp-route-id="@po.PurchaseOrderId" class="fw-bold">@po.PoNumber</a></td>
+                    <td>@po.SupplierName</td>
+                    <td class="small">@po.WarehouseName</td>
+                    <td class="small">@Fmt.Date(po.OrderDate)</td>
+                    <td class="small">@Fmt.Date(po.ExpectedDate)</td>
+                    <td class="text-end">@po.ItemCount</td>
+                    <td class="text-end tabular">@Fmt.Money(po.TotalAmount)</td>
+                    <td><span class="pill @Badge.Generic(po.Status)">@po.Status</span></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+@if (!Model.Any()) { <div class="empty"><i class="bi bi-cart"></i>No purchase orders.</div> }
+</div>

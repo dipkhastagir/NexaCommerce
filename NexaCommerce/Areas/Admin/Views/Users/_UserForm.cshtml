@@ -1,0 +1,11 @@
+@model UserFormVm
+@{ var editing = Model.UserId > 0; }
+<div asp-validation-summary="ModelOnly" class="flash flash-error mb-3"></div>
+<div class="row g-3">
+    <div class="col-md-6"><label asp-for="FullName" class="form-label"></label><input asp-for="FullName" class="form-control" /><span asp-validation-for="FullName"></span></div>
+    <div class="col-md-6"><label asp-for="Email" class="form-label"></label>@if (editing) { <input class="form-control" value="@Model.Email" disabled /><input type="hidden" asp-for="Email" /> } else { <input asp-for="Email" class="form-control" /> }<span asp-validation-for="Email"></span></div>
+    <div class="col-md-6"><label asp-for="Phone" class="form-label"></label><input asp-for="Phone" class="form-control" /></div>
+    <div class="col-md-6"><label asp-for="RoleName" class="form-label"></label><select asp-for="RoleName" class="form-select"><option>Admin</option><option>Manager</option><option>Staff</option><option>Customer</option></select></div>
+    <div class="col-md-6"><label asp-for="Password" class="form-label">@(editing ? "New password (leave blank to keep)" : "Initial password")</label><input asp-for="Password" class="form-control" autocomplete="new-password" /><span asp-validation-for="Password"></span></div>
+    <div class="col-md-6 d-flex align-items-end"><div class="form-check form-switch"><input asp-for="IsActive" class="form-check-input" /><label asp-for="IsActive" class="form-check-label"></label></div></div>
+</div>

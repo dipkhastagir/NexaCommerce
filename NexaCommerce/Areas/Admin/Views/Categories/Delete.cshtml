@@ -1,0 +1,18 @@
+@model Category
+@{ ViewData["Title"] = "Delete " + Model.Name; }
+<div class="page-head"><div><div class="crumbs"><a asp-action="Index">Categories</a> / Delete</div><h1>Delete @Model.Name?</h1></div></div>
+<div class="panel" style="max-width:600px">
+    @if (Model.ProductCount > 0)
+    {
+        <div class="flash flash-error mb-3"><i class="bi bi-exclamation-triangle"></i>@Model.ProductCount products still use this category. Move them to another category first.</div>
+        <a class="btn btn-ghost" asp-controller="Products" asp-action="Index" asp-route-category="@Model.CategoryId">Show those products</a>
+    }
+    else
+    {
+        <p>The category has no products. Deleting it can't be undone.</p>
+        <form asp-action="Delete" asp-route-id="@Model.CategoryId" method="post" class="d-flex gap-2">
+            <button class="btn btn-danger" type="submit">Delete category</button>
+            <a class="btn btn-ghost" asp-action="Index">Keep it</a>
+        </form>
+    }
+</div>

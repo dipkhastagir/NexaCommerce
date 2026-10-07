@@ -1,0 +1,82 @@
+@model PagedResult<Product>
+@{
+    ViewData["Title"] = "Products";
+    var cats = (List<Category>)ViewBag.Categories;
+    var canEdit = User.IsInRole("Admin") || User.IsInRole("Manager");
+}
+<div class="page-head">
+    <div><h1>Products</h1><div class="sub">@Model.TotalCount products in the catalog</div></div>
+    @if (canEdit)
+    {
+        <a class="btn btn-primary btn-sm" asp-action="Create"><i class="bi bi-plus-lg me-1"></i>New product</a>
+    }
+</div>
+<form method="get" class="filter-bar row g-2 align-items-center">
+    <div class="col-md-4"><input class="form-control" name="q" value="@ViewBag.Q" placeholder="Name, SKU or brand" /></div>
+    <div class="col-md-3">
+        <select class="form-select" name="category">
+            <option value="">All categories</option>
+            @foreach (var c in cats)
+            {
+                <option value="@c.CategoryId" selected="@(ViewBag.Category == c.CategoryId)">@c.Name</option>
+            }
+        </select>
+    </div>
+    <div class="col-md-2">
+        <select class="form-select" name="stock">
+            <option value="">Any stock</option>
+            @foreach (var st in new[] { "In stock", "Low stock", "Out of stock" })
+            {
+                <option value="@st" selected="@(ViewBag.Stock == st)">@st</option>
+            }
+        </select>
+    </div>
+    <div class="col-md-2">
+        <select class="form-select" name="sort">
+            @foreach (var so in new[] { ("newest", "Newest"), ("name", "Name"), ("popular", "Best selling"), ("price_desc", "Price high-low"), ("stock", "Lowest stock") })
+            {
+                <option value="@so.Item1" selected="@(ViewBag.Sort == so.Item1)">@so.Item2</option>
+            }
+        </select>
+    </div>
+    <div class="col-md-1"><button class="btn btn-ink w-100" type="submit">Filter</button></div>
+</form>
+<div class="table-wrap">
+    <div class="table-scroll">
+        <table class="table-nx">
+            <thead><tr><th>Product</th><th>Category</th><th class="text-end">Price</th><th class="text-end">Cost</th><th class="text-end">Margin</th><th class="text-end">Stock</th><th class="text-end">Sold</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+                @foreach (var p in Model.Items)
+                {
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="mini-thumb" style="background:@Visual.Tint(p.CategoryId);color:@Visual.Ink(p.CategoryId)"><i class="bi @p.CategoryIcon"></i></span>
+                                <div class="lh-sm"><a asp-action="Details" asp-route-id="@p.ProductId" class="fw-bold text-body">@p.Name</a><div class="small text-muted">@p.Sku @if (p.IsFeatured) { <i class="bi bi-star-fill text-warning ms-1" title="Featured"></i> }</div></div>
+                            </div>
+                        </td>
+                        <td class="small">@p.CategoryName</td>
+                        <td class="text-end tabular">@Fmt.Money(p.EffectivePrice)@if (p.OnSale) { <div class="small text-muted text-decoration-line-through">@Fmt.Money(p.Price)</div> }</td>
+                        <td class="text-end tabular small">@Fmt.Money(p.CostPrice)</td>
+                        <td class="text-end tabular small">@p.MarginPercent%</td>
+                        <td class="text-end tabular fw-bold @Badge.Stock(p.StockStatus)">@p.StockQuantity</td>
+                        <td class="text-end tabular small">@p.UnitsSold</td>
+                        <td>@if (p.IsActive) { <span class="pill st-delivered">Active</span> } else { <span class="pill st-default">Hidden</span> }</td>
+                        <td class="text-end text-nowrap">
+                            <a class="btn btn-ghost btn-sm" asp-controller="Inventory" asp-action="Adjust" asp-route-id="@p.ProductId" title="Adjust stock"><i class="bi bi-plus-slash-minus"></i></a>
+                            @if (canEdit)
+                            {
+                                <a class="btn btn-ghost btn-sm" asp-action="Edit" asp-route-id="@p.ProductId" title="Edit"><i class="bi bi-pencil"></i></a>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    @if (!Model.Items.Any())
+    {
+        <div class="empty"><i class="bi bi-box-seam"></i>No products match these filters.</div>
+    }
+</div>
+<partial name="_Pagination" model="@((Model.Page, Model.TotalPages, Model.TotalCount))" />

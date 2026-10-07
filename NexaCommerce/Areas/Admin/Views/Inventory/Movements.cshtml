@@ -1,0 +1,41 @@
+@model PagedResult<StockMovement>
+@{
+    var product = (Product)ViewBag.Product;
+    ViewData["Title"] = "Stock ledger";
+    DateTime? from = ViewBag.From; DateTime? to = ViewBag.To;
+}
+<div class="page-head">
+    <div><div class="crumbs"><a asp-action="Index">Inventory</a> / Ledger</div><h1>Stock ledger@(product != null ? ": " + product.Name : "")</h1><div class="sub">Signed movements with running balance after each one.</div></div>
+    @if (product != null) { <a class="btn btn-primary btn-sm" asp-action="Adjust" asp-route-id="@product.ProductId">Adjust stock</a> }
+</div>
+<form method="get" class="filter-bar row g-2">
+    <input type="hidden" name="productId" value="@ViewBag.ProductId" />
+    <div class="col-md-3"><select class="form-select" name="type"><option value="">All types</option>@foreach (var t in new[] { "OPENING", "SALE", "PURCHASE", "ADJUSTMENT", "COUNT", "RETURN", "DAMAGE", "CANCEL" }) { <option value="@t" selected="@(ViewBag.Type == t)">@t</option> }</select></div>
+    <div class="col-md-3"><input class="form-control" type="date" name="from" value="@(from?.ToString("yyyy-MM-dd"))" /></div>
+    <div class="col-md-3"><input class="form-control" type="date" name="to" value="@(to?.ToString("yyyy-MM-dd"))" /></div>
+    <div class="col-md-3 d-flex gap-2"><button class="btn btn-ink flex-fill" type="submit">Filter</button>@if (product != null) { <a class="btn btn-ghost" asp-action="Movements">All products</a> }</div>
+</form>
+<div class="table-wrap"><div class="table-scroll">
+    <table class="table-nx">
+        <thead><tr><th>When</th><th>Product</th><th>Type</th><th class="text-end">Qty</th><th class="text-end">Balance</th><th>Warehouse</th><th>Reference</th><th>Note</th><th>By</th></tr></thead>
+        <tbody>
+            @foreach (var m in Model.Items)
+            {
+                <tr>
+                    <td class="small text-nowrap">@Fmt.Stamp(m.CreatedAt)</td>
+                    <td><a asp-action="Movements" asp-route-productId="@m.ProductId" class="text-body fw-semibold">@m.ProductName</a><div class="small text-muted">@m.Sku</div></td>
+                    <td><span class="pill st-default">@m.MovementType</span></td>
+                    <td class="text-end tabular fw-bold @(m.Quantity < 0 ? "text-danger" : "text-success")">@m.Quantity.ToString("+#;-#;0")</td>
+                    <td class="text-end tabular">@m.BalanceAfter</td>
+                    <td class="small">@m.WarehouseName</td>
+                    <td class="small">@m.Reference</td>
+                    <td class="small text-muted">@m.Note</td>
+                    <td class="small">@m.CreatedByName</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+@if (!Model.Items.Any()) { <div class="empty"><i class="bi bi-journal"></i>No movements match.</div> }
+</div>
+<partial name="_Pagination" model="@((Model.Page, Model.TotalPages, Model.TotalCount))" />

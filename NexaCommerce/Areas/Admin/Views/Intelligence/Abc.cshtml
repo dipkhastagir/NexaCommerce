@@ -1,0 +1,42 @@
+@model List<AbcItem>
+@{
+    ViewData["Title"] = "ABC analysis";
+    int days = ViewBag.Days;
+    var l = System.Text.Json.JsonSerializer.Serialize(Model.Select((m, i) => (i + 1).ToString()));
+    var rev = System.Text.Json.JsonSerializer.Serialize(Model.Select(m => m.Revenue));
+    var cum = System.Text.Json.JsonSerializer.Serialize(Model.Select(m => Math.Round(m.Cumulative * 100, 1)));
+    var col = System.Text.Json.JsonSerializer.Serialize(Model.Select(m => m.Class == "A" ? "#5B3DF5" : m.Class == "B" ? "#E8A33D" : "#C9C7DA"));
+}
+<div class="page-head">
+    <div><div class="crumbs"><a asp-action="Index">Intelligence</a> / ABC</div><h1>ABC analysis</h1><div class="sub">Products ranked by revenue over the last @days days. A = first 80% of revenue, B = next 15%, C = the rest.</div></div>
+    <div class="tab-links mb-0">@foreach (var d in new[] { 30, 90, 180 }) { <a asp-action="Abc" asp-route-days="@d" class="@(days == d ? "active" : "")">@d days</a> }</div>
+</div>
+<div class="row g-3 mb-3">
+    @foreach (var c in new[] { "A", "B", "C" })
+    {
+        var items = Model.Where(m => m.Class == c).ToList();
+        <div class="col-md-4"><div class="stat @(c == "A" ? "violet" : c == "B" ? "" : "sky")"><div class="lbl">Class @c</div><div class="val">@items.Count products</div><div class="meta">@Fmt.Pct(items.Sum(i => i.Share), 0) of revenue &middot; @(c == "A" ? "tight control, never stock out" : c == "B" ? "regular review" : "simple rules, consider pruning")</div></div></div>
+    }
+</div>
+<div class="panel mb-3"><div class="panel-title">Pareto chart</div><div class="chart-box tall"><canvas id="pareto"></canvas></div></div>
+<div class="table-wrap"><div class="table-scroll"><table class="table-nx">
+    <thead><tr><th>#</th><th>Product</th><th>Category</th><th class="text-end">Units</th><th class="text-end">Revenue</th><th class="text-end">Share</th><th class="text-end">Cumulative</th><th>Class</th></tr></thead>
+    <tbody>
+        @for (var i = 0; i < Model.Count; i++)
+        {
+            var a = Model[i];
+            <tr><td>@(i + 1)</td><td><a asp-controller="Products" asp-action="Details" asp-route-id="@a.ProductId">@a.Name</a></td><td class="small">@a.CategoryName</td><td class="text-end tabular">@a.Units</td><td class="text-end tabular">@Fmt.Money(a.Revenue)</td><td class="text-end tabular">@Fmt.Pct(a.Share)</td><td class="text-end tabular">@Fmt.Pct(a.Cumulative)</td><td><span class="pill @(a.Class == "A" ? "st-processing" : a.Class == "B" ? "st-pending" : "st-default")">@a.Class</span></td></tr>
+        }
+    </tbody>
+</table></div></div>
+@section Scripts {
+<script>
+    new Chart(document.getElementById('pareto'), {
+        data: { labels: @Html.Raw(l), datasets: [
+            { type: 'bar', label: 'Revenue', data: @Html.Raw(rev), backgroundColor: @Html.Raw(col), yAxisID: 'y' },
+            { type: 'line', label: 'Cumulative %', data: @Html.Raw(cum), borderColor: '#17153B', pointRadius: 0, yAxisID: 'y1' }
+        ] },
+        options: { scales: { x: { title: { display: true, text: 'Product rank' }, grid: { display: false } }, y: { beginAtZero: true }, y1: { position: 'right', min: 0, max: 100, grid: { display: false } } } }
+    });
+</script>
+}

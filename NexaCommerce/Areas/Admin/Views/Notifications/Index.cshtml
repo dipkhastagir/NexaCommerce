@@ -1,0 +1,23 @@
+@model List<Notification>
+@{ ViewData["Title"] = "Notifications"; bool unread = ViewBag.Unread; }
+<div class="page-head">
+    <div><h1>Notifications</h1><div class="sub">Low stock, new orders, flagged orders and system messages.</div></div>
+    <div class="d-flex gap-2">
+        <form asp-action="MarkAll" method="post"><button class="btn btn-ghost btn-sm" type="submit">Mark all read</button></form>
+        <form asp-action="ClearRead" method="post" data-confirm="Delete all read notifications?"><button class="btn btn-ghost btn-sm" type="submit">Clear read</button></form>
+    </div>
+</div>
+<div class="tab-links"><a asp-action="Index" class="@(!unread ? "active" : "")">All</a><a asp-action="Index" asp-route-unread="true" class="@(unread ? "active" : "")">Unread</a></div>
+@if (!Model.Any()) { <div class="panel empty"><i class="bi bi-bell-slash"></i>You're all caught up.</div> }
+<div class="table-wrap">
+    @foreach (var n in Model)
+    {
+        var icon = n.Category switch { "Stock" => "bi-box-seam", "Order" => "bi-receipt", "Risk" => "bi-shield-exclamation", "Review" => "bi-chat-square-quote", _ => "bi-info-circle" };
+        <a class="d-flex gap-3 align-items-start p-3 border-bottom text-body" asp-action="Open" asp-route-id="@n.NotificationId" asp-route-link="@n.Link" style="@(n.IsRead ? "opacity:.65" : "")">
+            <span class="mini-thumb" style="background:var(--violet-soft);color:var(--violet-deep)"><i class="bi @icon"></i></span>
+            <span class="flex-grow-1"><b>@n.Title</b><br /><span class="small text-muted">@n.Message</span></span>
+            <span class="small text-muted text-nowrap">@Fmt.Ago(n.CreatedAt)</span>
+            @if (!n.IsRead) { <span class="notice-dot mt-2"></span> }
+        </a>
+    }
+</div>

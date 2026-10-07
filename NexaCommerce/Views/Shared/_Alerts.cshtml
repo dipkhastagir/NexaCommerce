@@ -1,0 +1,12 @@
+@if (TempData["Success"] is string ok)
+{
+    <div class="flash flash-success mb-3" role="status" data-autohide><i class="bi bi-check-circle-fill"></i>@ok</div>
+}
+@if (TempData["Error"] is string err)
+{
+    <div class="flash flash-error mb-3" role="alert"><i class="bi bi-exclamation-octagon-fill"></i>@err</div>
+}
+@if (TempData["Info"] is string info)
+{
+    <div class="flash flash-info mb-3" role="status" data-autohide><i class="bi bi-info-circle-fill"></i>@info</div>
+}

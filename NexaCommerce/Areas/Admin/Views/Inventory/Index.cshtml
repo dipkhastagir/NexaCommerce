@@ -1,0 +1,40 @@
+@model PagedResult<Product>
+@{ ViewData["Title"] = "Inventory"; var cats = (List<Category>)ViewBag.Categories; }
+<div class="page-head">
+    <div><h1>Inventory</h1><div class="sub">Lowest stock first. Every change goes through the stock ledger.</div></div>
+    <div class="d-flex gap-2">
+        <a class="btn btn-ghost btn-sm" asp-action="Movements"><i class="bi bi-journal-text me-1"></i>Stock ledger</a>
+        <a class="btn btn-ghost btn-sm" asp-action="LowStock"><i class="bi bi-exclamation-triangle me-1"></i>Low stock</a>
+    </div>
+</div>
+<form method="get" class="filter-bar row g-2">
+    <div class="col-md-5"><input class="form-control" name="q" value="@ViewBag.Q" placeholder="Product or SKU" /></div>
+    <div class="col-md-3"><select class="form-select" name="category"><option value="">All categories</option>@foreach (var c in cats) { <option value="@c.CategoryId" selected="@(ViewBag.Category == c.CategoryId)">@c.Name</option> }</select></div>
+    <div class="col-md-3"><select class="form-select" name="stock"><option value="">Any status</option>@foreach (var st in new[] { "In stock", "Low stock", "Out of stock" }) { <option value="@st" selected="@(ViewBag.Stock == st)">@st</option> }</select></div>
+    <div class="col-md-1"><button class="btn btn-ink w-100" type="submit">Go</button></div>
+</form>
+<div class="table-wrap"><div class="table-scroll">
+    <table class="table-nx">
+        <thead><tr><th>Product</th><th>Supplier</th><th style="width:220px">Level</th><th class="text-end">On hand</th><th class="text-end">Reorder at</th><th class="text-end">Value at cost</th><th></th></tr></thead>
+        <tbody>
+            @foreach (var p in Model.Items)
+            {
+                var pct = p.ReorderLevel == 0 ? 100 : Math.Min(100, (int)(100.0 * p.StockQuantity / (p.ReorderLevel * 3)));
+                var color = p.StockQuantity == 0 ? "var(--coral)" : p.StockQuantity <= p.ReorderLevel ? "var(--amber)" : "var(--mint)";
+                <tr>
+                    <td><a asp-controller="Products" asp-action="Details" asp-route-id="@p.ProductId" class="fw-bold text-body">@p.Name</a><div class="small text-muted">@p.Sku</div></td>
+                    <td class="small">@p.SupplierName</td>
+                    <td><div class="meter"><span style="width:@(pct)%;background:@color"></span></div><div class="small @Badge.Stock(p.StockStatus) mt-1">@p.StockStatus</div></td>
+                    <td class="text-end tabular fw-bold">@p.StockQuantity</td>
+                    <td class="text-end tabular">@p.ReorderLevel</td>
+                    <td class="text-end tabular">@Fmt.Money(p.StockQuantity * p.CostPrice)</td>
+                    <td class="text-end text-nowrap">
+                        <a class="btn btn-primary btn-sm" asp-action="Adjust" asp-route-id="@p.ProductId">Adjust</a>
+                        <a class="btn btn-ghost btn-sm" asp-action="Movements" asp-route-productId="@p.ProductId" title="Ledger"><i class="bi bi-clock-history"></i></a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div></div>
+<partial name="_Pagination" model="@((Model.Page, Model.TotalPages, Model.TotalCount))" />

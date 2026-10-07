@@ -1,0 +1,31 @@
+@model ShopVm
+<aside class="panel panel-tight filter-panel">
+    <h6>Category</h6>
+    <a class="filter-link @(Model.CategoryId == null ? "active" : "")" href="@QueryHelper.With(Context.Request, "category", "")">All categories</a>
+    @foreach (var c in Model.Categories)
+    {
+        <a class="filter-link @(Model.CategoryId == c.CategoryId ? "active" : "")" href="@QueryHelper.With(Context.Request, "category", c.CategoryId)"><span><i class="bi @c.Icon me-2"></i>@c.Name</span><span class="text-muted small">@c.ProductCount</span></a>
+    }
+    <h6>Brand</h6>
+    <a class="filter-link @(Model.BrandId == null ? "active" : "")" href="@QueryHelper.With(Context.Request, "brand", "")">Any brand</a>
+    @foreach (var b in Model.Brands.Where(b => b.ProductCount > 0))
+    {
+        <a class="filter-link @(Model.BrandId == b.BrandId ? "active" : "")" href="@QueryHelper.With(Context.Request, "brand", b.BrandId)"><span>@b.Name</span><span class="text-muted small">@b.ProductCount</span></a>
+    }
+    <form method="get" asp-action="Index">
+        <input type="hidden" name="q" value="@Model.Search" />
+        <input type="hidden" name="category" value="@Model.CategoryId" />
+        <input type="hidden" name="brand" value="@Model.BrandId" />
+        <input type="hidden" name="sort" value="@Model.Sort" />
+        <h6>Price</h6>
+        <div class="d-flex gap-2">
+            <input class="form-control form-control-sm" type="number" name="min" value="@Model.MinPrice" placeholder="Min" min="0" aria-label="Minimum price" />
+            <input class="form-control form-control-sm" type="number" name="max" value="@Model.MaxPrice" placeholder="Max" min="0" aria-label="Maximum price" />
+        </div>
+        <div class="form-check mt-3">
+            <input class="form-check-input" type="checkbox" name="instock" value="true" id="instock" checked="@Model.InStock" />
+            <label class="form-check-label" for="instock">In stock only</label>
+        </div>
+        <button class="btn btn-ink btn-sm w-100 mt-3" type="submit">Apply filters</button>
+    </form>
+</aside>

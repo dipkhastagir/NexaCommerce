@@ -1,0 +1,35 @@
+@model List<BasketRule>
+@{ ViewData["Title"] = "Basket rules"; var pts = System.Text.Json.JsonSerializer.Serialize(Model.Select(r => new { x = Math.Round(r.Confidence, 3), y = Math.Round(r.Lift, 2), label = r.AntecedentName + " -> " + r.ConsequentName })); }
+<div class="page-head">
+    <div><div class="crumbs"><a asp-action="Index">Intelligence</a> / Basket</div><h1>Basket rules</h1><div class="sub">"Customers who buy A also buy B" mined from completed orders. Rules with lift above 1 drive storefront recommendations.</div></div>
+    <form method="get" class="d-flex gap-2"><input class="form-control form-control-sm" name="q" value="@ViewBag.Q" placeholder="Filter by product" /><button class="btn btn-ink btn-sm" type="submit">Filter</button></form>
+</div>
+<div class="row g-3 mb-3">
+    <div class="col-xl-5"><div class="panel h-100"><div class="panel-title">Confidence vs lift</div><div class="chart-box tall"><canvas id="sc"></canvas></div></div></div>
+    <div class="col-xl-7">
+        <div class="panel h-100">
+            <div class="panel-title">Reading the metrics</div>
+            <div class="formula mb-2">support(A&rarr;B) = n(A&cap;B) / N &nbsp;&nbsp; confidence = n(A&cap;B) / n(A) &nbsp;&nbsp; lift = confidence / (n(B) / N)</div>
+            <p class="small text-muted mb-0">Support shows how common the pair is, confidence how often buyers of A also take B, and lift how much more likely that is than chance. Lift of 3 means buying A makes B three times as likely. A minimum co-occurrence count (Settings &rarr; BasketMinSupportCount) filters out noise.</p>
+        </div>
+    </div>
+</div>
+<div class="table-wrap"><div class="table-scroll"><table class="table-nx">
+    <thead><tr><th>If a customer buys</th><th>they also buy</th><th class="text-end">Orders together</th><th class="text-end">Support</th><th class="text-end">Confidence</th><th class="text-end">Lift</th></tr></thead>
+    <tbody>
+        @foreach (var r in Model.Take(200))
+        {
+            <tr><td><a asp-controller="Products" asp-action="Details" asp-route-id="@r.AntecedentId">@r.AntecedentName</a></td><td><a asp-controller="Products" asp-action="Details" asp-route-id="@r.ConsequentId" class="fw-semibold">@r.ConsequentName</a></td><td class="text-end tabular">@r.PairCount</td><td class="text-end tabular">@Fmt.Pct(r.Support, 2)</td><td class="text-end tabular">@Fmt.Pct(r.Confidence)</td><td class="text-end tabular fw-bold @(r.Lift >= 2 ? "text-success" : "")">@r.Lift.ToString("0.00")</td></tr>
+        }
+    </tbody>
+</table>
+@if (!Model.Any()) { <div class="empty"><i class="bi bi-diagram-3"></i>No rules meet the minimum support yet.</div> }
+</div></div>
+@section Scripts {
+<script>
+    const pts = @Html.Raw(pts);
+    new Chart(document.getElementById('sc'), { type: 'scatter', data: { datasets: [{ data: pts, backgroundColor: 'rgba(91,61,245,.6)' }] },
+        options: { plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => c.raw.label + ' (conf ' + c.raw.x + ', lift ' + c.raw.y + ')' } } },
+            scales: { x: { title: { display: true, text: 'Confidence' }, min: 0, max: 1 }, y: { title: { display: true, text: 'Lift' }, beginAtZero: true } } } });
+</script>
+}

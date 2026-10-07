@@ -1,0 +1,37 @@
+@model List<Product>
+@{ ViewData["Title"] = "Compare products"; }
+<div class="container py-3">
+    <h1 class="h3 mb-3">Compare products</h1>
+    @if (!Model.Any())
+    {
+        <div class="panel empty"><i class="bi bi-layout-split"></i>Add up to four products with the Compare button on a product page.<br /><a class="btn btn-primary mt-3" asp-controller="Shop" asp-action="Index">Browse products</a></div>
+    }
+    else
+    {
+        var cheapest = Model.Min(p => p.EffectivePrice);
+        var bestRated = Model.Max(p => p.AvgRating);
+        <div class="table-wrap table-scroll">
+            <table class="table-nx">
+                <thead><tr><th style="width:160px"></th>@foreach (var p in Model) { <th>@p.Name</th> }</tr></thead>
+                <tbody>
+                    <tr><td class="text-muted">Price</td>@foreach (var p in Model) { <td><b>@Fmt.Money(p.EffectivePrice)</b>@if (p.EffectivePrice == cheapest && Model.Count > 1) { <span class="pill st-delivered ms-1">Lowest</span> }</td> }</tr>
+                    <tr><td class="text-muted">Category</td>@foreach (var p in Model) { <td>@p.CategoryName</td> }</tr>
+                    <tr><td class="text-muted">Brand</td>@foreach (var p in Model) { <td>@p.BrandName</td> }</tr>
+                    <tr><td class="text-muted">Rating</td>@foreach (var p in Model) { <td>@(p.ReviewCount > 0 ? p.AvgRating.ToString("0.0") + " (" + p.ReviewCount + ")" : "-")@if (p.AvgRating == bestRated && p.ReviewCount > 0 && Model.Count > 1) { <span class="pill st-delivered ms-1">Best</span> }</td> }</tr>
+                    <tr><td class="text-muted">Availability</td>@foreach (var p in Model) { <td class="@Badge.Stock(p.StockStatus) fw-semibold">@p.StockStatus</td> }</tr>
+                    <tr><td class="text-muted">Units sold</td>@foreach (var p in Model) { <td>@p.UnitsSold</td> }</tr>
+                    <tr><td class="text-muted">Description</td>@foreach (var p in Model) { <td class="small">@p.Description</td> }</tr>
+                    <tr><td></td>@foreach (var p in Model)
+                        {
+                            <td>
+                                <div class="d-flex gap-1">
+                                    <form asp-controller="Cart" asp-action="Add" method="post"><input type="hidden" name="productId" value="@p.ProductId" /><button class="btn btn-primary btn-sm" type="submit" disabled="@(p.StockQuantity == 0)">Add to cart</button></form>
+                                    <form asp-action="Remove" method="post"><input type="hidden" name="productId" value="@p.ProductId" /><button class="btn btn-ghost btn-sm" type="submit">Remove</button></form>
+                                </div>
+                            </td>
+                        }</tr>
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

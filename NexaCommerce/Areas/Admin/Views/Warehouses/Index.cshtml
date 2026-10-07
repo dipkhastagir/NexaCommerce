@@ -1,0 +1,16 @@
+@model List<Warehouse>
+@{ ViewData["Title"] = "Warehouses"; var moves = (Dictionary<int, int>)ViewBag.Movements; }
+<div class="page-head"><div><h1>Warehouses</h1><div class="sub">Locations stock movements and goods receipts are recorded against.</div></div><a class="btn btn-primary btn-sm" asp-action="Form"><i class="bi bi-plus-lg me-1"></i>New warehouse</a></div>
+<div class="row g-3">
+    @foreach (var w in Model)
+    {
+        <div class="col-md-6 col-xl-4">
+            <div class="panel h-100">
+                <div class="d-flex justify-content-between"><b class="fs-5 display-font">@w.Name</b>@if (!w.IsActive) { <span class="pill st-default">Inactive</span> }</div>
+                <p class="text-muted small mb-3"><i class="bi bi-geo-alt me-1"></i>@w.Location</p>
+                <dl class="kv"><dt>Capacity</dt><dd>@w.Capacity.ToString("N0") units</dd><dt>Movements</dt><dd>@moves.GetValueOrDefault(w.WarehouseId)</dd></dl>
+                <a class="btn btn-ghost btn-sm mt-3" asp-action="Form" asp-route-id="@w.WarehouseId">Edit</a>
+            </div>
+        </div>
+    }
+</div>

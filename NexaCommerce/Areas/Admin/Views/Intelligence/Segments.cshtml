@@ -1,0 +1,40 @@
+@model SegmentsVm
+@{
+    ViewData["Title"] = "Customer segments";
+    var l = System.Text.Json.JsonSerializer.Serialize(Model.Summary.Select(s => s.Segment));
+    var v = System.Text.Json.JsonSerializer.Serialize(Model.Summary.Select(s => s.Customers));
+    var c = System.Text.Json.JsonSerializer.Serialize(Model.Summary.Select(s => s.Color));
+}
+<div class="page-head"><div><div class="crumbs"><a asp-action="Index">Intelligence</a> / Segments</div><h1>Customer segments (RFM)</h1><div class="sub">Recency, frequency and monetary value scored 1-5 by quintile, then mapped to segments.</div></div></div>
+<div class="row g-3 mb-3">
+    <div class="col-xl-4"><div class="panel h-100"><div class="panel-title">Customers per segment</div><div class="chart-box tall"><canvas id="seg"></canvas></div></div></div>
+    <div class="col-xl-8">
+        <div class="table-wrap h-100"><table class="table-nx">
+            <thead><tr><th>Segment</th><th class="text-end">Customers</th><th class="text-end">Revenue</th><th class="text-end">Avg recency</th><th class="text-end">Avg orders</th><th>Recommended action</th></tr></thead>
+            <tbody>
+                @foreach (var s in Model.Summary)
+                {
+                    <tr><td><a asp-action="Segments" asp-route-segment="@s.Segment" class="fw-semibold"><span class="d-inline-block rounded-circle me-2" style="width:10px;height:10px;background:@s.Color"></span>@s.Segment</a></td><td class="text-end tabular">@s.Customers</td><td class="text-end tabular">@Fmt.MoneyShort(s.Revenue)</td><td class="text-end tabular">@s.AvgRecency.ToString("0") d</td><td class="text-end tabular">@s.AvgFrequency.ToString("0.0")</td><td class="small text-muted">@s.Action</td></tr>
+                }
+            </tbody>
+        </table></div>
+    </div>
+</div>
+<div class="d-flex justify-content-between align-items-center mb-2">
+    <h2 class="h5 mb-0">@(string.IsNullOrEmpty(Model.Filter) ? "All customers" : Model.Filter) <span class="text-muted fs-6">(@Model.Customers.Count)</span></h2>
+    @if (!string.IsNullOrEmpty(Model.Filter)) { <a class="btn btn-ghost btn-sm" asp-action="Segments">Show all</a> }
+</div>
+<div class="table-wrap"><div class="table-scroll"><table class="table-nx">
+    <thead><tr><th>Customer</th><th class="text-end">Recency</th><th class="text-end">Frequency</th><th class="text-end">Monetary</th><th class="text-center">R</th><th class="text-center">F</th><th class="text-center">M</th><th>Segment</th></tr></thead>
+    <tbody>
+        @foreach (var r in Model.Customers)
+        {
+            <tr><td><a asp-controller="Customers" asp-action="Details" asp-route-id="@r.UserId" class="fw-semibold">@r.FullName</a><div class="small text-muted">@r.Email</div></td><td class="text-end tabular">@(r.RecencyDays < 0 ? "-" : r.RecencyDays + " d")</td><td class="text-end tabular">@r.Frequency</td><td class="text-end tabular">@Fmt.Money(r.Monetary)</td><td class="text-center">@r.R</td><td class="text-center">@r.F</td><td class="text-center">@r.M</td><td><span class="pill st-default">@r.Segment</span></td></tr>
+        }
+    </tbody>
+</table></div></div>
+@section Scripts {
+<script>
+    new Chart(document.getElementById('seg'), { type: 'doughnut', data: { labels: @Html.Raw(l), datasets: [{ data: @Html.Raw(v), backgroundColor: @Html.Raw(c), borderWidth: 0 }] }, options: { cutout: '58%', plugins: { legend: { position: 'bottom' } } } });
+</script>
+}

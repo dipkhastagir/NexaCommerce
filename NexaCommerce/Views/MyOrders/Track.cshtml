@@ -1,0 +1,39 @@
+@model Order
+@{
+    ViewData["Title"] = "Track " + Model.OrderNumber;
+    var steps = new[] { ("Pending", "bi-receipt", "Placed"), ("Confirmed", "bi-check2", "Confirmed"), ("Processing", "bi-box-seam", "Packing"), ("Shipped", "bi-truck", "On the way"), ("Delivered", "bi-house-check", "Delivered") };
+    var idx = NexaCommerce.Services.OrderService.StepIndex(Model.Status);
+    var fill = idx <= 0 ? 0 : (int)(88.0 * idx / (steps.Length - 1));
+}
+<div class="container py-3" style="max-width:860px">
+    <div class="crumbs"><a asp-action="Index">My orders</a> / <a asp-action="Details" asp-route-id="@Model.OrderId">@Model.OrderNumber</a> / Track</div>
+    <h1 class="h3">Tracking order @Model.OrderNumber</h1>
+    <div class="panel mt-3">
+        @if (Model.Status == "Cancelled")
+        {
+            <div class="flash flash-error"><i class="bi bi-x-octagon"></i>This order was cancelled. Stock was released and any online payment refunded.</div>
+        }
+        else
+        {
+            <div class="track">
+                <span class="fill" style="width:@(fill)%"></span>
+                @for (var i = 0; i < steps.Length; i++)
+                {
+                    <div class="step @(i <= idx ? "done" : "")"><span class="dot"><i class="bi @steps[i].Item2"></i></span>@steps[i].Item3</div>
+                }
+            </div>
+            <p class="text-center text-muted small mb-0">
+                @(Model.Status switch { "Pending" => "We've received your order and are confirming stock.", "Confirmed" => "Your order is confirmed and queued for packing.", "Processing" => "Your items are being packed at our warehouse.", "Shipped" => "Your parcel is with the courier.", "Delivered" => "Delivered. Enjoy your purchase!", _ => "" })
+            </p>
+        }
+    </div>
+    <div class="panel mt-3">
+        <h2 class="panel-title">History</h2>
+        <ul class="timeline">
+            @foreach (var h in Model.History.AsEnumerable().Reverse())
+            {
+                <li><b>@h.Status</b> <span class="when ms-2">@Fmt.Stamp(h.ChangedAt)</span>@if (!string.IsNullOrEmpty(h.Note)) { <div class="small text-muted">@h.Note</div> }</li>
+            }
+        </ul>
+    </div>
+</div>

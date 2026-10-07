@@ -1,0 +1,74 @@
+@model ProductFormVm
+@{
+    var editing = Model.ProductId > 0;
+    ViewData["Title"] = editing ? "Edit " + Model.Name : "New product";
+}
+<div class="page-head">
+    <div><div class="crumbs"><a asp-action="Index">Products</a> / @(editing ? Model.Sku : "New")</div><h1>@ViewData["Title"]</h1></div>
+</div>
+<form asp-action="@(editing ? "Edit" : "Create")" asp-route-id="@(editing ? Model.ProductId : (int?)null)" method="post">
+    <div asp-validation-summary="ModelOnly" class="flash flash-error mb-3"></div>
+    <div class="row g-3">
+        <div class="col-xl-8">
+            <div class="panel mb-3">
+                <div class="panel-title">Basics</div>
+                <div class="row g-3">
+                    <div class="col-md-8"><label asp-for="Name" class="form-label"></label><input asp-for="Name" class="form-control" /><span asp-validation-for="Name"></span></div>
+                    <div class="col-md-4"><label asp-for="Sku" class="form-label"></label><input asp-for="Sku" class="form-control text-uppercase" placeholder="EL-1234" /><span asp-validation-for="Sku"></span></div>
+                    <div class="col-12"><label asp-for="Description" class="form-label"></label><textarea asp-for="Description" class="form-control" rows="4"></textarea></div>
+                    <div class="col-md-4"><label asp-for="CategoryId" class="form-label"></label><select asp-for="CategoryId" asp-items="Model.Categories" class="form-select"><option value="">Choose...</option></select><span asp-validation-for="CategoryId"></span></div>
+                    <div class="col-md-4"><label asp-for="BrandId" class="form-label"></label><select asp-for="BrandId" asp-items="Model.Brands" class="form-select"><option value="">No brand</option></select></div>
+                    <div class="col-md-4"><label asp-for="SupplierId" class="form-label"></label><select asp-for="SupplierId" asp-items="Model.Suppliers" class="form-select"><option value="">No supplier</option></select></div>
+                </div>
+            </div>
+            <div class="panel">
+                <div class="panel-title">Pricing</div>
+                <div class="row g-3">
+                    <div class="col-md-4"><label asp-for="Price" class="form-label"></label><input asp-for="Price" class="form-control" step="0.01" id="price" /><span asp-validation-for="Price"></span></div>
+                    <div class="col-md-4"><label asp-for="DiscountPrice" class="form-label"></label><input asp-for="DiscountPrice" class="form-control" step="0.01" id="sale" placeholder="Optional" /><span asp-validation-for="DiscountPrice"></span></div>
+                    <div class="col-md-4"><label asp-for="CostPrice" class="form-label"></label><input asp-for="CostPrice" class="form-control" step="0.01" id="cost" /><span asp-validation-for="CostPrice"></span></div>
+                </div>
+                <div class="small mt-2 text-muted" id="marginHint"></div>
+            </div>
+        </div>
+        <div class="col-xl-4">
+            <div class="panel mb-3">
+                <div class="panel-title">Stock</div>
+                @if (editing)
+                {
+                    <p class="small text-muted">On hand: <b>@Model.StockQuantity</b>. Change stock through <a asp-controller="Inventory" asp-action="Adjust" asp-route-id="@Model.ProductId">a stock adjustment</a> so the ledger stays accurate.</p>
+                    <input type="hidden" asp-for="StockQuantity" />
+                }
+                else
+                {
+                    <div class="mb-3"><label asp-for="StockQuantity" class="form-label"></label><input asp-for="StockQuantity" class="form-control" /><span asp-validation-for="StockQuantity"></span></div>
+                }
+                <label asp-for="ReorderLevel" class="form-label"></label><input asp-for="ReorderLevel" class="form-control" /><span asp-validation-for="ReorderLevel"></span>
+                <div class="small text-muted mt-1">An alert is raised when stock reaches this level. The Reorder planner can suggest a data-driven value.</div>
+            </div>
+            <div class="panel mb-3">
+                <div class="panel-title">Visibility</div>
+                <div class="form-check form-switch mb-2"><input asp-for="IsActive" class="form-check-input" /><label asp-for="IsActive" class="form-check-label"></label></div>
+                <div class="form-check form-switch"><input asp-for="IsFeatured" class="form-check-input" /><label asp-for="IsFeatured" class="form-check-label"></label></div>
+            </div>
+            <button class="btn btn-primary w-100" type="submit">@(editing ? "Save changes" : "Create product")</button>
+            <a class="btn btn-ghost w-100 mt-2" asp-action="@(editing ? "Details" : "Index")" asp-route-id="@(editing ? Model.ProductId : (int?)null)">Cancel</a>
+        </div>
+    </div>
+</form>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            const p = document.getElementById('price'), s = document.getElementById('sale'), c = document.getElementById('cost'), h = document.getElementById('marginHint');
+            function upd() {
+                const price = parseFloat(s.value) || parseFloat(p.value) || 0, cost = parseFloat(c.value) || 0;
+                if (!price) { h.textContent = ''; return; }
+                const m = (price - cost) / price * 100;
+                h.textContent = 'Customer pays ' + price.toFixed(2) + ', margin ' + m.toFixed(1) + '%';
+                h.className = 'small mt-2 ' + (m < 0 ? 'text-danger' : m < 15 ? 'text-warning' : 'text-success');
+            }
+            [p, s, c].forEach(x => x.addEventListener('input', upd)); upd();
+        })();
+    </script>
+}

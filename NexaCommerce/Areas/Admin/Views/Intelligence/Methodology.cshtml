@@ -1,0 +1,38 @@
+@{ ViewData["Title"] = "Methodology"; }
+<div class="page-head"><div><div class="crumbs"><a asp-action="Index">Intelligence</a> / Methodology</div><h1>Methodology</h1><div class="sub">How each decision-support model works, its assumptions and how it can be extended in research.</div></div></div>
+<div class="row g-3">
+    <div class="col-xl-6"><div class="panel h-100">
+        <div class="panel-title">1. Demand forecasting</div>
+        <p class="small">Daily unit sales per product (zero-filled, cancelled orders excluded) are modelled with Holt's linear exponential smoothing. Parameters &alpha; &isin; [0.05, 0.95] and &beta; &isin; [0.01, 0.51] are grid-searched on one-step-ahead SSE. The last 14 days are held out; MAE, RMSE, sMAPE and the ratio to a naive last-value forecast (a MASE-style skill score) are reported. Prediction intervals use the residual standard deviation widened with the horizon.</p>
+        <p class="small text-muted mb-0">Research extensions: Holt-Winters weekly seasonality, Croston/TSB for intermittent demand, gradient boosting with calendar features, and conformal intervals with guaranteed coverage.</p>
+    </div></div>
+    <div class="col-xl-6"><div class="panel h-100">
+        <div class="panel-title">2. Inventory policy</div>
+        <p class="small">A continuous-review (s, Q) policy. Safety stock SS = z&sigma;<sub>d</sub>&radic;L, reorder point ROP = &mu;<sub>d</sub>L + SS and order quantity from the EOQ, where L is the supplier lead time and z the service-level factor. Open purchase orders count toward inventory position.</p>
+        <p class="small text-muted mb-0">Extensions: lead-time variability, forecast-driven (rather than historical) &mu; and &sigma;, multi-echelon allocation across warehouses, and simulation-based evaluation of fill rate vs holding cost.</p>
+    </div></div>
+    <div class="col-xl-6"><div class="panel h-100">
+        <div class="panel-title">3. RFM segmentation</div>
+        <p class="small">Recency (days since last non-cancelled order), Frequency (order count) and Monetary (total spend) are scored 1-5 by quintile across buying customers. R and F scores map to ten named segments with a recommended marketing action.</p>
+        <p class="small text-muted mb-0">Extensions: k-means or Gaussian mixture clustering on scaled RFM, BG/NBD + Gamma-Gamma customer lifetime value, churn prediction.</p>
+    </div></div>
+    <div class="col-xl-6"><div class="panel h-100">
+        <div class="panel-title">4. Market-basket analysis</div>
+        <p class="small">All ordered product pairs within an order are counted in SQL. Support, confidence and lift are computed for each directed rule A&rarr;B; rules with lift &gt; 1 and a minimum co-occurrence count feed the "frequently bought together" widgets on product and cart pages.</p>
+        <p class="small text-muted mb-0">Extensions: FP-Growth for larger itemsets, sequential pattern mining, A/B testing recommendation widgets against conversion rate.</p>
+    </div></div>
+    <div class="col-xl-6"><div class="panel h-100">
+        <div class="panel-title">5. ABC classification</div>
+        <p class="small">Products are ranked by revenue over a window and classified by cumulative share (A &lt; 80%, B &lt; 95%, C the rest), giving a Pareto view for differentiated stock control.</p>
+        <p class="small text-muted mb-0">Extensions: ABC-XYZ (adding demand variability), margin-weighted ranking.</p>
+    </div></div>
+    <div class="col-xl-6"><div class="panel h-100">
+        <div class="panel-title">6. Order risk scoring</div>
+        <p class="small">An additive, interpretable rule model over account age, customer-relative and population-relative order value (z-scores), item quantity, order velocity, address mismatch, payment method and coupon use. Scores are capped at 100 and banded by configurable thresholds; each order stores the reasons.</p>
+        <p class="small text-muted mb-0">Extensions: use the exported orders dataset with labels to train gradient boosting or isolation forest models and compare against the rule baseline, with SHAP values for explanation.</p>
+    </div></div>
+</div>
+<div class="panel mt-3">
+    <div class="panel-title">Data generation note</div>
+    <p class="small mb-0">On first run the database is filled with a reproducible synthetic history (fixed random seed): 45 customers with Pareto-distributed activity, 40 products with individual popularity and trend, weekly seasonality (Friday/Saturday uplift), known product affinities and a small share of injected anomalous orders. Because the generating process is known, the models can be validated against ground truth before being applied to real data.</p>
+</div>

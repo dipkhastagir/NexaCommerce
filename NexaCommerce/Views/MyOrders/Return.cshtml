@@ -1,0 +1,16 @@
+@model ReturnRequestVm
+@{ ViewData["Title"] = "Request a return"; }
+<div class="container py-3" style="max-width:720px">
+    <div class="crumbs"><a asp-action="Index">My orders</a> / <a asp-action="Details" asp-route-id="@Model.OrderId">@Model.OrderNumber</a> / Return</div>
+    <h1 class="h3 mb-3">Request a return for @Model.OrderNumber</h1>
+    <form asp-action="Return" method="post" class="panel">
+        <input type="hidden" asp-for="OrderId" /><input type="hidden" asp-for="OrderNumber" />
+        <div asp-validation-summary="ModelOnly" class="flash flash-error mb-3"></div>
+        <label asp-for="Reason" class="form-label"></label>
+        <textarea asp-for="Reason" class="form-control" rows="5" placeholder="Describe the problem, which item it affects and whether you'd prefer a refund or replacement."></textarea>
+        <span asp-validation-for="Reason"></span>
+        <p class="small text-muted mt-2">Returns are accepted within 30 days of delivery. Our team replies within two working days.</p>
+        <button class="btn btn-primary" type="submit">Submit request</button>
+    </form>
+</div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

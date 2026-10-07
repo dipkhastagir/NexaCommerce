@@ -1,0 +1,17 @@
+@model Product
+@{ ViewData["Title"] = "Delete " + Model.Name; }
+<div class="page-head"><div><div class="crumbs"><a asp-action="Index">Products</a> / <a asp-action="Details" asp-route-id="@Model.ProductId">@Model.Sku</a> / Delete</div><h1>Delete @Model.Name?</h1></div></div>
+<div class="panel" style="max-width:640px">
+    @if (Model.UnitsSold > 0)
+    {
+        <div class="flash flash-info mb-3"><i class="bi bi-archive"></i>This product has @Model.UnitsSold units of sales history. It will be archived (hidden from the store) rather than deleted, so past orders and reports stay correct.</div>
+    }
+    else
+    {
+        <p>This permanently removes the product, its stock ledger and its reviews. This can't be undone.</p>
+    }
+    <form asp-action="Delete" asp-route-id="@Model.ProductId" method="post" class="d-flex gap-2">
+        <button class="btn btn-danger" type="submit">@(Model.UnitsSold > 0 ? "Archive product" : "Delete product")</button>
+        <a class="btn btn-ghost" asp-action="Details" asp-route-id="@Model.ProductId">Keep it</a>
+    </form>
+</div>

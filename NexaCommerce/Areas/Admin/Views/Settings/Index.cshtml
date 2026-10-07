@@ -1,0 +1,38 @@
+@model SettingsVm
+@{ ViewData["Title"] = "Settings"; var db = (NexaCommerce.Data.DatabaseStatus)ViewBag.Db; }
+<div class="page-head"><div><h1>Settings</h1><div class="sub">Store details, delivery fees and the parameters of the Intelligence models.</div></div></div>
+<div class="row g-3">
+    <div class="col-xl-8">
+        <form asp-action="Index" method="post" class="panel">
+            @foreach (var s in Model.Settings)
+            {
+                <div class="row g-2 align-items-center py-2 border-bottom">
+                    <div class="col-md-5"><label class="fw-semibold small" for="s_@s.SettingKey">@s.SettingKey</label><div class="small text-muted">@s.Description</div></div>
+                    <div class="col-md-7">
+                        @if (s.SettingValue == "true" || s.SettingValue == "false")
+                        {
+                            <select class="form-select form-select-sm" id="s_@s.SettingKey" name="values[@s.SettingKey]"><option value="true" selected="@(s.SettingValue == "true")">On</option><option value="false" selected="@(s.SettingValue == "false")">Off</option></select>
+                        }
+                        else
+                        {
+                            <input class="form-control form-control-sm" id="s_@s.SettingKey" name="values[@s.SettingKey]" value="@s.SettingValue" />
+                        }
+                    </div>
+                </div>
+            }
+            <button class="btn btn-primary mt-3" type="submit">Save settings</button>
+        </form>
+    </div>
+    <div class="col-xl-4">
+        <div class="panel">
+            <div class="panel-title">Database</div>
+            <dl class="kv">
+                <dt>Server</dt><dd>@db.ServerName</dd>
+                <dt>Status</dt><dd>@(db.IsReady ? "Connected" : "Not ready")</dd>
+                <dt>Initialised</dt><dd>@Fmt.Stamp(db.InitializedAt)</dd>
+            </dl>
+            <div class="divider"></div>
+            <ul class="small text-muted mb-0">@foreach (var l in db.Log) { <li>@l</li> }</ul>
+        </div>
+    </div>
+</div>

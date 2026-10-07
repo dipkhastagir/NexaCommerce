@@ -1,0 +1,36 @@
+@model List<Role>
+@{
+    ViewData["Title"] = "Roles";
+    var perms = new[]
+    {
+        ("View dashboard, orders, customers", true, true, true),
+        ("Process orders and change status", true, true, true),
+        ("Adjust stock and view ledger", true, true, true),
+        ("Moderate reviews and handle messages", true, true, true),
+        ("Create and edit products", true, true, false),
+        ("Categories, brands, suppliers, warehouses", true, true, false),
+        ("Purchase orders and receiving", true, true, false),
+        ("Coupons and return refunds", true, true, false),
+        ("Reports and Intelligence module", true, true, false),
+        ("Write via REST API", true, true, false),
+        ("Users, settings and audit log", true, false, false)
+    };
+}
+<div class="page-head"><div><div class="crumbs"><a asp-action="Index">Users</a> / Roles</div><h1>Permission matrix</h1><div class="sub">Enforced with ASP.NET Core authorization policies: BackOffice, Management and AdminOnly.</div></div></div>
+<div class="row g-3 mb-3">
+    @foreach (var r in Model) { <div class="col-md-3"><div class="stat violet"><div class="lbl">@r.Name</div><div class="val">@r.UserCount</div><div class="meta">@r.Description</div></div></div> }
+</div>
+<div class="table-wrap"><table class="table-nx role-matrix">
+    <thead><tr><th>Capability</th><th>Admin</th><th>Manager</th><th>Staff</th><th>Customer</th></tr></thead>
+    <tbody>
+        @foreach (var p in perms)
+        {
+            <tr><td>@p.Item1</td>
+                <td>@if (p.Item2) { <i class="bi bi-check-circle-fill text-success"></i> } else { <i class="bi bi-dash text-muted"></i> }</td>
+                <td>@if (p.Item3) { <i class="bi bi-check-circle-fill text-success"></i> } else { <i class="bi bi-dash text-muted"></i> }</td>
+                <td>@if (p.Item4) { <i class="bi bi-check-circle-fill text-success"></i> } else { <i class="bi bi-dash text-muted"></i> }</td>
+                <td><i class="bi bi-dash text-muted"></i></td></tr>
+        }
+        <tr><td>Shop, check out, track and return own orders</td><td><i class="bi bi-check-circle-fill text-success"></i></td><td><i class="bi bi-check-circle-fill text-success"></i></td><td><i class="bi bi-check-circle-fill text-success"></i></td><td><i class="bi bi-check-circle-fill text-success"></i></td></tr>
+    </tbody>
+</table></div>

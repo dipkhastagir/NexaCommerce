@@ -1,0 +1,28 @@
+@model ContactMessage
+@{ ViewData["Title"] = "Contact"; }
+<div class="container py-4">
+    <div class="row g-4">
+        <div class="col-lg-5">
+            <h1>Get in touch</h1>
+            <p class="text-muted">Questions about an order, bulk purchases or a product? Send us a message and the support team will reply within one working day.</p>
+            <div class="panel mt-3">
+                <p class="mb-2"><i class="bi bi-geo-alt me-2 text-primary"></i>Karwan Bazar, Dhaka-1215</p>
+                <p class="mb-2"><i class="bi bi-telephone me-2 text-primary"></i>+880 1700-000000</p>
+                <p class="mb-0"><i class="bi bi-clock me-2 text-primary"></i>Saturday to Thursday, 9:30 am - 5:30 pm</p>
+            </div>
+        </div>
+        <div class="col-lg-7">
+            <form asp-action="Contact" method="post" class="panel">
+                <div asp-validation-summary="ModelOnly" class="mb-2"></div>
+                <div class="row g-3">
+                    <div class="col-md-6"><label asp-for="Name" class="form-label"></label><input asp-for="Name" class="form-control" /><span asp-validation-for="Name"></span></div>
+                    <div class="col-md-6"><label asp-for="Email" class="form-label"></label><input asp-for="Email" class="form-control" /><span asp-validation-for="Email"></span></div>
+                    <div class="col-12"><label asp-for="Subject" class="form-label"></label><input asp-for="Subject" class="form-control" /><span asp-validation-for="Subject"></span></div>
+                    <div class="col-12"><label asp-for="Body" class="form-label"></label><textarea asp-for="Body" class="form-control" rows="6"></textarea><span asp-validation-for="Body"></span></div>
+                </div>
+                <button class="btn btn-primary mt-3" type="submit">Send message</button>
+            </form>
+        </div>
+    </div>
+</div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

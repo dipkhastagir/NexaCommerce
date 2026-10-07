@@ -1,0 +1,35 @@
+@model ReturnRequest
+@{ ViewData["Title"] = "Return #" + Model.ReturnId; var open = Model.Status is "Requested" or "Approved"; }
+<div class="page-head"><div><div class="crumbs"><a asp-action="Index">Returns</a> / #@Model.ReturnId</div><h1>Return #@Model.ReturnId <span class="pill @Badge.Generic(Model.Status) fs-6 align-middle">@Model.Status</span></h1><div class="sub">Order <a asp-controller="Orders" asp-action="Details" asp-route-id="@Model.OrderId">@Model.OrderNumber</a> (@Fmt.Money(Model.OrderTotal)) &middot; @Model.CustomerName &middot; opened @Fmt.Stamp(Model.CreatedAt)</div></div></div>
+<div class="row g-3">
+    <div class="col-xl-7">
+        <div class="panel"><div class="panel-title">Customer's reason</div><p class="mb-0">@Model.Reason</p>
+            @if (!string.IsNullOrEmpty(Model.AdminNote)) { <div class="divider"></div><div class="small-caps">Our response</div><p class="mb-0">@Model.AdminNote</p> }
+            @if (Model.ResolvedAt.HasValue) { <p class="small text-muted mt-2 mb-0">Resolved @Fmt.Stamp(Model.ResolvedAt)</p> }
+        </div>
+    </div>
+    <div class="col-xl-5">
+        @if (open && (User.IsInRole("Admin") || User.IsInRole("Manager")))
+        {
+            <form asp-action="Resolve" method="post" class="panel">
+                <input type="hidden" name="id" value="@Model.ReturnId" />
+                <div class="panel-title">Decide</div>
+                <label class="form-label">Outcome</label>
+                <select class="form-select mb-2" name="status">
+                    @if (Model.Status == "Requested") { <option value="Approved">Approve - waiting for item</option> }
+                    <option value="Refunded">Refund now</option>
+                    <option value="Rejected">Reject</option>
+                </select>
+                <label class="form-label">Refund amount</label>
+                <input class="form-control mb-2" type="number" step="0.01" name="refund" value="@Model.OrderTotal.ToString(System.Globalization.CultureInfo.InvariantCulture)" max="@Model.OrderTotal.ToString(System.Globalization.CultureInfo.InvariantCulture)" />
+                <label class="form-label">Message to customer</label>
+                <textarea class="form-control mb-3" name="note" rows="3"></textarea>
+                <button class="btn btn-primary w-100" type="submit">Save decision</button>
+            </form>
+        }
+        else
+        {
+            <div class="panel"><p class="mb-0 text-muted">@(open ? "A manager needs to decide this return." : "This return is closed.")</p></div>
+        }
+    </div>
+</div>

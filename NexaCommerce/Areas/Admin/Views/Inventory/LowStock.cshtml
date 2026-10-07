@@ -1,0 +1,29 @@
+@model List<Product>
+@{ ViewData["Title"] = "Low stock"; }
+<div class="page-head">
+    <div><div class="crumbs"><a asp-action="Index">Inventory</a> / Low stock</div><h1>At or below reorder level</h1><div class="sub">@Model.Count products need restocking. The reorder planner turns these into purchase quantities.</div></div>
+    <a class="btn btn-primary btn-sm" asp-controller="Intelligence" asp-action="Reorder"><i class="bi bi-arrow-repeat me-1"></i>Open reorder planner</a>
+</div>
+@if (!Model.Any())
+{
+    <div class="panel empty"><i class="bi bi-check2-circle"></i>Every active product is above its reorder level.</div>
+}
+else
+{
+    <div class="table-wrap"><table class="table-nx">
+        <thead><tr><th>Product</th><th>Supplier</th><th class="text-end">On hand</th><th class="text-end">Reorder level</th><th class="text-end">Shortfall</th><th></th></tr></thead>
+        <tbody>
+            @foreach (var p in Model)
+            {
+                <tr>
+                    <td><a asp-controller="Products" asp-action="Details" asp-route-id="@p.ProductId" class="fw-bold text-body">@p.Name</a><div class="small text-muted">@p.Sku</div></td>
+                    <td>@if (p.SupplierId.HasValue) { <a asp-controller="Suppliers" asp-action="Details" asp-route-id="@p.SupplierId">@p.SupplierName</a> }</td>
+                    <td class="text-end tabular fw-bold @Badge.Stock(p.StockStatus)">@p.StockQuantity</td>
+                    <td class="text-end tabular">@p.ReorderLevel</td>
+                    <td class="text-end tabular">@(p.ReorderLevel - p.StockQuantity)</td>
+                    <td class="text-end"><a class="btn btn-ghost btn-sm" asp-action="Adjust" asp-route-id="@p.ProductId">Adjust</a> @if (p.SupplierId.HasValue) { <a class="btn btn-primary btn-sm" asp-controller="PurchaseOrders" asp-action="Create" asp-route-supplierId="@p.SupplierId" asp-route-fromReorder="true">Reorder</a> }</td>
+                </tr>
+            }
+        </tbody>
+    </table></div>
+}

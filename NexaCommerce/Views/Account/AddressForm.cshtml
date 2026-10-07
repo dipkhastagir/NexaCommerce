@@ -1,0 +1,27 @@
+@model Address
+@{ ViewData["Title"] = Model.AddressId == 0 ? "Add address" : "Edit address"; }
+<div class="container py-3">
+    <div class="row g-4">
+        <div class="col-lg-3"><partial name="_AccountNav" /></div>
+        <div class="col-lg-7">
+            <h1 class="h3 mb-3">@ViewData["Title"]</h1>
+            <form asp-action="AddressForm" method="post" class="panel">
+                <input type="hidden" asp-for="AddressId" />
+                <div class="row g-3">
+                    <div class="col-md-4"><label asp-for="Label" class="form-label"></label><input asp-for="Label" class="form-control" placeholder="Home, Office..." /><span asp-validation-for="Label"></span></div>
+                    <div class="col-md-8"><label asp-for="RecipientName" class="form-label"></label><input asp-for="RecipientName" class="form-control" /><span asp-validation-for="RecipientName"></span></div>
+                    <div class="col-md-6"><label asp-for="Phone" class="form-label"></label><input asp-for="Phone" class="form-control" /><span asp-validation-for="Phone"></span></div>
+                    <div class="col-md-6"><label asp-for="City" class="form-label"></label><input asp-for="City" class="form-control" /><span asp-validation-for="City"></span></div>
+                    <div class="col-md-8"><label asp-for="Line1" class="form-label"></label><input asp-for="Line1" class="form-control" /><span asp-validation-for="Line1"></span></div>
+                    <div class="col-md-4"><label asp-for="PostalCode" class="form-label"></label><input asp-for="PostalCode" class="form-control" /></div>
+                    <div class="col-12 form-check ms-2"><input asp-for="IsDefault" class="form-check-input" /><label asp-for="IsDefault" class="form-check-label"></label></div>
+                </div>
+                <div class="d-flex gap-2 mt-3">
+                    <button class="btn btn-primary" type="submit">Save address</button>
+                    <a class="btn btn-ghost" asp-action="Addresses">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

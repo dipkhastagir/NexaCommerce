@@ -1,0 +1,55 @@
+@model NexaCommerce.Data.DatabaseStatus
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Database setup | NexaCommerce</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" />
+</head>
+<body>
+    <div class="container py-5" style="max-width:820px">
+        <div class="brand mb-4"><span class="brand-mark"><i class="bi bi-boxes"></i></span>NexaCommerce</div>
+        @if (Model.IsReady)
+        {
+            <div class="panel">
+                <h1 class="h3"><i class="bi bi-check-circle-fill text-success me-2"></i>Database is connected</h1>
+                <p>Server <b>@Model.ServerName</b>, initialised @Fmt.Stamp(Model.InitializedAt).</p>
+                <a class="btn btn-primary" href="/">Open the store</a>
+            </div>
+        }
+        else
+        {
+            <div class="panel">
+                <h1 class="h3"><i class="bi bi-database-x me-2" style="color:var(--coral)"></i>SQL Server isn't reachable yet</h1>
+                <p class="text-muted">NexaCommerce creates and fills its own database on first run, but it needs to find your SQL Server instance first.</p>
+                <div class="flash flash-error my-3">@Model.Error</div>
+                <h2 class="h6 mt-4">Fix it in three steps</h2>
+                <ol class="lh-lg">
+                    <li>Open <b>SQL Server Management Studio</b> and note the <b>Server name</b> in the connect dialog (for example <code>localhost</code>, <code>.\SQLEXPRESS</code> or <code>DESKTOP-ABC\SQLEXPRESS</code>).</li>
+                    <li>Open <code>appsettings.json</code> in Visual Studio and put that name after <code>Server=</code> in <code>ConnectionStrings:DefaultConnection</code>. Remember to write a backslash as <code>\\</code> inside JSON.</li>
+                    <li>Make sure the SQL Server service is running (Windows Services &rarr; <i>SQL Server (MSSQLSERVER)</i> or <i>SQL Server (SQLEXPRESS)</i>), then press <b>Try again</b>.</li>
+                </ol>
+                <form asp-action="Retry" method="post"><button class="btn btn-primary" type="submit"><i class="bi bi-arrow-repeat me-1"></i>Try again</button></form>
+            </div>
+            @if (Model.Log.Any())
+            {
+                <div class="panel mt-3">
+                    <h2 class="h6">Connection attempts</h2>
+                    <ul class="small mb-0">
+                        @foreach (var l in Model.Log)
+                        {
+                            <li>@l</li>
+                        }
+                    </ul>
+                </div>
+            }
+        }
+    </div>
+</body>
+</html>

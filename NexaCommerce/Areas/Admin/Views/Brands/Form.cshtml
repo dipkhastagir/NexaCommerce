@@ -1,0 +1,11 @@
+@model Brand
+@{ var editing = Model.BrandId > 0; ViewData["Title"] = editing ? "Edit " + Model.Name : "New brand"; }
+<div class="page-head"><div><div class="crumbs"><a asp-action="Index">Brands</a> / @(editing ? Model.Name : "New")</div><h1>@ViewData["Title"]</h1></div></div>
+<form asp-action="@(editing ? "Edit" : "Create")" asp-route-id="@(editing ? Model.BrandId : (int?)null)" method="post" class="panel" style="max-width:640px">
+    <input type="hidden" asp-for="BrandId" />
+    <div class="mb-3"><label asp-for="Name" class="form-label"></label><input asp-for="Name" class="form-control" /><span asp-validation-for="Name"></span></div>
+    <div class="mb-3"><label asp-for="Description" class="form-label"></label><textarea asp-for="Description" class="form-control" rows="3"></textarea></div>
+    <div class="form-check form-switch mb-3"><input asp-for="IsActive" class="form-check-input" /><label asp-for="IsActive" class="form-check-label"></label></div>
+    <button class="btn btn-primary" type="submit">Save brand</button> <a class="btn btn-ghost" asp-action="Index">Cancel</a>
+</form>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

@@ -1,0 +1,70 @@
+@model PurchaseOrderFormVm
+@{ ViewData["Title"] = "New purchase order"; }
+<div class="page-head"><div><div class="crumbs"><a asp-action="Index">Purchase orders</a> / New</div><h1>New purchase order</h1></div></div>
+<form asp-action="Create" method="post">
+    <div asp-validation-summary="ModelOnly" class="flash flash-error mb-3"></div>
+    <div class="row g-3">
+        <div class="col-xl-8">
+            <div class="table-wrap">
+                <table class="table-nx" id="lines">
+                    <thead><tr><th>Product</th><th style="width:130px">Quantity</th><th style="width:160px">Unit cost</th><th class="text-end" style="width:140px">Line total</th></tr></thead>
+                    <tbody>
+                        @for (var i = 0; i < Model.Lines.Count; i++)
+                        {
+                            <tr>
+                                <td>
+                                    <select name="Lines[@i].ProductId" class="form-select form-select-sm prod">
+                                        <option value="0">Choose product...</option>
+                                        @foreach (var p in Model.Products)
+                                        {
+                                            <option value="@p.ProductId" data-cost="@p.CostPrice.ToString(System.Globalization.CultureInfo.InvariantCulture)" selected="@(Model.Lines[i].ProductId == p.ProductId)">@p.Name (@p.Sku) - stock @p.StockQuantity</option>
+                                        }
+                                    </select>
+                                </td>
+                                <td><input name="Lines[@i].Quantity" type="number" min="0" value="@Model.Lines[i].Quantity" class="form-control form-control-sm qty" /></td>
+                                <td><input name="Lines[@i].UnitCost" type="number" step="0.01" min="0" value="@Model.Lines[i].UnitCost.ToString(System.Globalization.CultureInfo.InvariantCulture)" class="form-control form-control-sm cost" /></td>
+                                <td class="text-end tabular line">0.00</td>
+                            </tr>
+                        }
+                        <tr><td colspan="3" class="text-end fw-bold">Order total</td><td class="text-end tabular fw-bold" id="grand">0.00</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <p class="small text-muted mt-2">Empty lines are ignored. Choosing a product fills in its last cost price.</p>
+        </div>
+        <div class="col-xl-4">
+            <div class="panel">
+                <div class="mb-3"><label asp-for="SupplierId" class="form-label"></label><select asp-for="SupplierId" asp-items="Model.Suppliers" class="form-select"><option value="">Choose...</option></select><span asp-validation-for="SupplierId"></span></div>
+                <div class="mb-3"><label asp-for="WarehouseId" class="form-label"></label><select asp-for="WarehouseId" asp-items="Model.Warehouses" class="form-select"><option value="">Not specified</option></select></div>
+                <div class="mb-3"><label asp-for="ExpectedDate" class="form-label"></label><input asp-for="ExpectedDate" type="date" class="form-control" /></div>
+                <div class="mb-3"><label asp-for="Notes" class="form-label"></label><textarea asp-for="Notes" class="form-control" rows="3"></textarea></div>
+                <button class="btn btn-primary w-100" type="submit" name="submit" value="order">Place order</button>
+                <button class="btn btn-ghost w-100 mt-2" type="submit" name="submit" value="draft">Save as draft</button>
+            </div>
+        </div>
+    </div>
+</form>
+@section Scripts {
+    <script>
+        (function () {
+            const rows = document.querySelectorAll('#lines tbody tr');
+            function recalc() {
+                let total = 0;
+                rows.forEach(r => {
+                    const q = r.querySelector('.qty'), c = r.querySelector('.cost'), l = r.querySelector('.line');
+                    if (!q) return;
+                    const v = (parseFloat(q.value) || 0) * (parseFloat(c.value) || 0);
+                    l.textContent = v.toFixed(2); total += v;
+                });
+                document.getElementById('grand').textContent = total.toFixed(2);
+            }
+            rows.forEach(r => {
+                const s = r.querySelector('.prod');
+                if (!s) return;
+                s.addEventListener('change', () => { const o = s.selectedOptions[0]; if (o && o.dataset.cost) { r.querySelector('.cost').value = o.dataset.cost; if (!parseFloat(r.querySelector('.qty').value)) r.querySelector('.qty').value = 10; } recalc(); });
+                r.querySelectorAll('input').forEach(i => i.addEventListener('input', recalc));
+            });
+            recalc();
+        })();
+    </script>
+}

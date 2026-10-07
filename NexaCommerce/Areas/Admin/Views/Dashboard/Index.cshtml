@@ -1,0 +1,148 @@
+@model AdminDashboardVm
+@{
+    ViewData["Title"] = "Dashboard";
+    var s = Model.Stats;
+    var delta = Model.RevenuePrev30 == 0 ? 0 : (double)((Model.Revenue30 - Model.RevenuePrev30) / Model.RevenuePrev30);
+    var labels = System.Text.Json.JsonSerializer.Serialize(Model.Sales.Select(d => d.SaleDate.ToString("dd MMM")));
+    var revenue = System.Text.Json.JsonSerializer.Serialize(Model.Sales.Select(d => d.Revenue));
+    var orders = System.Text.Json.JsonSerializer.Serialize(Model.Sales.Select(d => d.Orders));
+    var catLabels = System.Text.Json.JsonSerializer.Serialize(Model.CategorySales.Select(c => c.Label));
+    var catValues = System.Text.Json.JsonSerializer.Serialize(Model.CategorySales.Select(c => c.Value));
+    var hour = DateTime.Now.Hour;
+    var greet = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+}
+<div class="page-head">
+    <div>
+        <h1>@greet, @User.GetFullName().Split(' ')[0]</h1>
+        <div class="sub">Here's how the store has done over the last 30 days.</div>
+    </div>
+    <div class="d-flex gap-2">
+        <a class="btn btn-ghost btn-sm" asp-controller="Reports" asp-action="Sales"><i class="bi bi-file-earmark-bar-graph me-1"></i>Sales report</a>
+        <a class="btn btn-primary btn-sm" asp-controller="Products" asp-action="Create"><i class="bi bi-plus-lg me-1"></i>New product</a>
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat violet">
+            <div class="lbl">Revenue, 30 days</div>
+            <div class="val tabular">@Fmt.MoneyShort(Model.Revenue30)</div>
+            <div class="meta"><span class="@(delta >= 0 ? "delta-up" : "delta-down")"><i class="bi @(delta >= 0 ? "bi-arrow-up-right" : "bi-arrow-down-right")"></i> @Fmt.Pct(Math.Abs(delta))</span> vs previous 30 days</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat mint">
+            <div class="lbl">Orders, 30 days</div>
+            <div class="val tabular">@Model.Orders30</div>
+            <div class="meta">Average order @Fmt.Money(Model.AvgOrderValue30)</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat">
+            <div class="lbl">Inventory value at cost</div>
+            <div class="val tabular">@Fmt.MoneyShort(s.InventoryValue)</div>
+            <div class="meta">@s.ActiveProducts active of @s.TotalProducts products</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat coral">
+            <div class="lbl">Needs attention</div>
+            <div class="val tabular">@(s.LowStockCount + s.OutOfStockCount + s.HighRiskOrders)</div>
+            <div class="meta"><a asp-controller="Inventory" asp-action="LowStock">@s.LowStockCount low</a>, @s.OutOfStockCount out of stock, <a asp-controller="Intelligence" asp-action="Risk" asp-route-level="High">@s.HighRiskOrders risky orders</a></div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-xl-8">
+        <div class="panel h-100">
+            <div class="panel-title">Daily revenue and orders <span class="small text-muted fw-normal">last 30 days</span></div>
+            <div class="chart-box"><canvas id="salesChart"></canvas></div>
+        </div>
+    </div>
+    <div class="col-xl-4">
+        <div class="panel h-100">
+            <div class="panel-title">Revenue by category</div>
+            <div class="chart-box"><canvas id="catChart"></canvas></div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-xl-7">
+        <div class="table-wrap">
+            <div class="d-flex justify-content-between align-items-center p-3 pb-2"><h2 class="h6 mb-0 fw-bold">Latest orders</h2><a class="small" asp-controller="Orders" asp-action="Index">All orders</a></div>
+            <div class="table-scroll">
+                <table class="table-nx">
+                    <thead><tr><th>Order</th><th>Customer</th><th>Status</th><th>Risk</th><th class="text-end">Total</th></tr></thead>
+                    <tbody>
+                        @foreach (var o in Model.RecentOrders)
+                        {
+                            <tr>
+                                <td><a asp-controller="Orders" asp-action="Details" asp-route-id="@o.OrderId" class="fw-bold">@o.OrderNumber</a><div class="small text-muted">@Fmt.Ago(o.CreatedAt)</div></td>
+                                <td>@o.CustomerName</td>
+                                <td><span class="pill @Badge.OrderStatus(o.Status)">@o.Status</span></td>
+                                <td><span class="pill @Badge.Risk(o.RiskLevel)">@o.RiskScore</span></td>
+                                <td class="text-end tabular">@Fmt.Money(o.TotalAmount)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-5">
+        <div class="panel mb-3">
+            <div class="panel-title">Top products, 30 days</div>
+            @{ var maxRev = Model.TopProducts.Count > 0 ? Model.TopProducts.Max(t => t.Revenue) : 1; }
+            @foreach (var t in Model.TopProducts)
+            {
+                <div class="mb-2">
+                    <div class="d-flex justify-content-between small"><a asp-controller="Products" asp-action="Details" asp-route-id="@t.ProductId" class="fw-semibold text-body">@t.ProductName</a><span class="tabular">@Fmt.MoneyShort(t.Revenue)</span></div>
+                    <div class="meter mt-1"><span style="width:@((int)(100 * t.Revenue / (maxRev == 0 ? 1 : maxRev)))%;background:var(--violet)"></span></div>
+                </div>
+            }
+        </div>
+        <div class="panel">
+            <div class="panel-title">Running low <a class="small fw-normal" asp-controller="Intelligence" asp-action="Reorder">Reorder planner</a></div>
+            @if (!Model.LowStock.Any())
+            {
+                <p class="text-muted mb-0">Every product is above its reorder level.</p>
+            }
+            @foreach (var p in Model.LowStock)
+            {
+                <div class="d-flex justify-content-between align-items-center py-1">
+                    <span class="small"><a asp-controller="Products" asp-action="Details" asp-route-id="@p.ProductId" class="text-body fw-semibold">@p.Name</a> <span class="text-muted">@p.Sku</span></span>
+                    <span class="pill @(p.StockQuantity == 0 ? "st-cancelled" : "st-pending")">@p.StockQuantity left</span>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    new Chart(document.getElementById('salesChart'), {
+        data: {
+            labels: @Html.Raw(labels),
+            datasets: [
+                { type: 'bar', label: 'Revenue', data: @Html.Raw(revenue), backgroundColor: 'rgba(91,61,245,.75)', borderRadius: 4, yAxisID: 'y' },
+                { type: 'line', label: 'Orders', data: @Html.Raw(orders), borderColor: '#E8A33D', backgroundColor: '#E8A33D', tension: .35, pointRadius: 0, yAxisID: 'y1' }
+            ]
+        },
+        options: {
+            interaction: { mode: 'index', intersect: false },
+            scales: {
+                x: { grid: { display: false }, ticks: { maxTicksLimit: 10 } },
+                y: { beginAtZero: true, grid: { color: '#EFEEF5' } },
+                y1: { beginAtZero: true, position: 'right', grid: { display: false } }
+            }
+        }
+    });
+    new Chart(document.getElementById('catChart'), {
+        type: 'doughnut',
+        data: { labels: @Html.Raw(catLabels), datasets: [{ data: @Html.Raw(catValues), backgroundColor: window.nxPalette, borderWidth: 0 }] },
+        options: { cutout: '62%', plugins: { legend: { position: 'bottom' } } }
+    });
+</script>
+}

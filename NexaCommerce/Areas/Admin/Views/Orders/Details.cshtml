@@ -1,0 +1,92 @@
+@model Order
+@{
+    ViewData["Title"] = "Order " + Model.OrderNumber;
+    var returns = (List<ReturnRequest>)ViewBag.Returns;
+    var next = Model.Status switch { "Pending" => "Confirmed", "Confirmed" => "Processing", "Processing" => "Shipped", "Shipped" => "Delivered", _ => null };
+    var closed = Model.Status is "Delivered" or "Cancelled";
+}
+<div class="page-head">
+    <div>
+        <div class="crumbs"><a asp-action="Index">Orders</a> / @Model.OrderNumber</div>
+        <h1>@Model.OrderNumber <span class="pill @Badge.OrderStatus(Model.Status) fs-6 align-middle">@Model.Status</span></h1>
+        <div class="sub">Placed @Fmt.Stamp(Model.CreatedAt) by <a asp-controller="Customers" asp-action="Details" asp-route-id="@Model.UserId">@Model.CustomerName</a></div>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+        <a class="btn btn-ghost btn-sm" asp-action="Invoice" asp-route-id="@Model.OrderId" target="_blank"><i class="bi bi-printer me-1"></i>Invoice</a>
+        @if (next != null)
+        {
+            <form asp-action="UpdateStatus" method="post"><input type="hidden" name="id" value="@Model.OrderId" /><input type="hidden" name="status" value="@next" /><button class="btn btn-primary btn-sm" type="submit">Mark @next.ToLower()</button></form>
+        }
+    </div>
+</div>
+@if (Model.RiskLevel != "Low")
+{
+    <div class="flash @(Model.RiskLevel == "High" ? "flash-error" : "flash-info") mb-3">
+        <i class="bi bi-shield-exclamation"></i>
+        <div class="flex-grow-1"><b>@Model.RiskLevel risk (@Model.RiskScore/100).</b> @Model.RiskReasons</div>
+        <form asp-action="Rescore" method="post"><input type="hidden" name="id" value="@Model.OrderId" /><button class="btn btn-sm btn-ghost" type="submit">Re-score</button></form>
+    </div>
+}
+<div class="row g-3">
+    <div class="col-xl-8">
+        <div class="table-wrap mb-3">
+            <table class="table-nx">
+                <thead><tr><th>Item</th><th class="text-end">Unit price</th><th class="text-end">Qty</th><th class="text-end">Total</th></tr></thead>
+                <tbody>
+                    @foreach (var i in Model.Items)
+                    {
+                        <tr><td><div class="d-flex align-items-center gap-2"><span class="mini-thumb" style="background:@Visual.Tint(i.ProductId);color:@Visual.Ink(i.ProductId)"><i class="bi @i.CategoryIcon"></i></span><div class="lh-sm"><a asp-controller="Products" asp-action="Details" asp-route-id="@i.ProductId" class="fw-semibold">@i.ProductName</a><div class="small text-muted">@i.Sku</div></div></div></td><td class="text-end tabular">@Fmt.Money(i.UnitPrice)</td><td class="text-end">@i.Quantity</td><td class="text-end tabular">@Fmt.Money(i.LineTotal)</td></tr>
+                    }
+                    <tr><td colspan="3" class="text-end text-muted">Subtotal</td><td class="text-end tabular">@Fmt.Money(Model.SubTotal)</td></tr>
+                    @if (Model.DiscountAmount > 0) { <tr><td colspan="3" class="text-end text-muted">Discount (@Model.CouponCode)</td><td class="text-end tabular text-success">- @Fmt.Money(Model.DiscountAmount)</td></tr> }
+                    <tr><td colspan="3" class="text-end text-muted">Delivery</td><td class="text-end tabular">@Fmt.Money(Model.ShippingFee)</td></tr>
+                    <tr><td colspan="3" class="text-end fw-bold">Total</td><td class="text-end tabular fw-bold">@Fmt.Money(Model.TotalAmount)</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="row g-3">
+            <div class="col-md-6"><div class="panel h-100"><div class="panel-title">Ship to</div><p class="mb-0">@Model.ShipName<br />@Model.ShipPhone<br />@Model.ShipAddress<br />@Model.ShipCity</p>@if (!string.IsNullOrEmpty(Model.Notes)) { <p class="small text-muted mt-2 mb-0">Note: @Model.Notes</p> }</div></div>
+            <div class="col-md-6">
+                <div class="panel h-100">
+                    <div class="panel-title">Payments</div>
+                    <p>@Model.PaymentMethod <span class="pill @Badge.Payment(Model.PaymentStatus)">@Model.PaymentStatus</span></p>
+                    @foreach (var p in Model.Payments)
+                    {
+                        <div class="d-flex justify-content-between small border-top py-1"><span>@p.Status &middot; @(p.TransactionRef ?? "cash")</span><span class="tabular">@Fmt.Money(p.Amount)</span></div>
+                    }
+                </div>
+            </div>
+        </div>
+        @if (returns.Any())
+        {
+            <div class="panel mt-3">
+                <div class="panel-title">Returns</div>
+                @foreach (var r in returns) { <div class="mb-1"><a asp-controller="Returns" asp-action="Details" asp-route-id="@r.ReturnId">Return #@r.ReturnId</a> <span class="pill @Badge.Generic(r.Status)">@r.Status</span> <span class="small text-muted">@r.Reason</span></div> }
+            </div>
+        }
+    </div>
+    <div class="col-xl-4">
+        @if (!closed)
+        {
+            <form asp-action="UpdateStatus" method="post" class="panel mb-3">
+                <input type="hidden" name="id" value="@Model.OrderId" />
+                <div class="panel-title">Change status</div>
+                <select class="form-select mb-2" name="status">
+                    @foreach (var s in NexaCommerce.Services.OrderService.Statuses.Where(s => s != Model.Status)) { <option value="@s" selected="@(s == next)">@s</option> }
+                </select>
+                <input class="form-control mb-2" name="note" placeholder="Note for the history (optional)" />
+                <button class="btn btn-ink w-100" type="submit">Update</button>
+                <div class="small text-muted mt-2">Cancelling restores stock and refunds online payments automatically.</div>
+            </form>
+        }
+        <div class="panel">
+            <div class="panel-title">History</div>
+            <ul class="timeline">
+                @foreach (var h in Model.History.AsEnumerable().Reverse())
+                {
+                    <li><b>@h.Status</b><div class="when">@Fmt.Stamp(h.ChangedAt) &middot; @(h.ChangedByName ?? "system")</div>@if (!string.IsNullOrEmpty(h.Note)) { <div class="small">@h.Note</div> }</li>
+                }
+            </ul>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,26 @@
+@model ForecastIndexVm
+@{ ViewData["Title"] = "Demand forecast"; }
+<div class="page-head">
+    <div><div class="crumbs"><a asp-action="Index">Intelligence</a> / Forecast</div><h1>Demand forecast</h1><div class="sub">Fitted on @Model.HistoryDays days of daily sales, projected @Model.Horizon days ahead. Accuracy measured on a 14-day hold-out.</div></div>
+</div>
+<div class="table-wrap"><div class="table-scroll"><table class="table-nx">
+    <thead><tr><th>Product</th><th class="text-end">Avg / day</th><th class="text-end">Next @Model.Horizon days</th><th>Trend</th><th class="text-end">&alpha;</th><th class="text-end">&beta;</th><th class="text-end">MAE</th><th class="text-end">sMAPE</th><th class="text-end">vs naive</th><th class="text-end">On hand</th><th>Stock-out</th></tr></thead>
+    <tbody>
+        @foreach (var f in Model.Results)
+        {
+            <tr>
+                <td><a asp-action="ForecastDetail" asp-route-id="@f.ProductId" class="fw-semibold">@f.Name</a><div class="small text-muted">@f.Sku &middot; @f.CategoryName</div></td>
+                <td class="text-end tabular">@Fmt.Num(f.AvgDailyDemand)</td>
+                <td class="text-end tabular fw-bold">@Fmt.Num(f.ForecastTotal, 0)</td>
+                <td><span class="pill @(f.TrendLabel == "Rising" ? "st-delivered" : f.TrendLabel == "Falling" ? "st-cancelled" : "st-default")"><i class="bi @(f.TrendLabel == "Rising" ? "bi-arrow-up-right" : f.TrendLabel == "Falling" ? "bi-arrow-down-right" : "bi-arrow-right")"></i>@f.TrendLabel</span></td>
+                <td class="text-end tabular small">@Fmt.Num(f.Alpha)</td>
+                <td class="text-end tabular small">@Fmt.Num(f.Beta)</td>
+                <td class="text-end tabular small">@Fmt.Num(f.Mae)</td>
+                <td class="text-end tabular small">@Fmt.Pct(f.Smape)</td>
+                <td class="text-end tabular small @(f.SkillRatio > 0 && f.SkillRatio < 1 ? "text-success" : "")">@(f.NaiveMae > 0 ? Fmt.Num(f.SkillRatio) : "-")</td>
+                <td class="text-end tabular">@f.StockQuantity</td>
+                <td>@if (f.DaysUntilStockout.HasValue) { <span class="pill @(f.DaysUntilStockout <= 7 ? "st-cancelled" : "st-pending")">in ~@f.DaysUntilStockout days</span> } else { <span class="small text-muted">beyond horizon</span> }</td>
+            </tr>
+        }
+    </tbody>
+</table></div></div>

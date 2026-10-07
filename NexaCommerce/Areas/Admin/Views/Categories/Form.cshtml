@@ -1,0 +1,30 @@
+@model Category
+@{
+    var editing = Model.CategoryId > 0;
+    ViewData["Title"] = editing ? "Edit " + Model.Name : "New category";
+    var icons = new[] { "bi-box", "bi-tv", "bi-laptop", "bi-phone", "bi-cup-hot", "bi-bag", "bi-book", "bi-bicycle", "bi-flower1", "bi-controller", "bi-basket", "bi-gem", "bi-house", "bi-tools", "bi-heart-pulse", "bi-palette" };
+}
+<div class="page-head"><div><div class="crumbs"><a asp-action="Index">Categories</a> / @(editing ? Model.Name : "New")</div><h1>@ViewData["Title"]</h1></div></div>
+<form asp-action="@(editing ? "Edit" : "Create")" asp-route-id="@(editing ? Model.CategoryId : (int?)null)" method="post" class="panel" style="max-width:760px">
+    <input type="hidden" asp-for="CategoryId" />
+    <div asp-validation-summary="ModelOnly" class="flash flash-error mb-3"></div>
+    <div class="row g-3">
+        <div class="col-md-6"><label asp-for="Name" class="form-label"></label><input asp-for="Name" class="form-control" /><span asp-validation-for="Name"></span></div>
+        <div class="col-md-6"><label asp-for="Slug" class="form-label">URL slug</label><input asp-for="Slug" class="form-control" placeholder="Generated from the name if empty" /><span asp-validation-for="Slug"></span></div>
+        <div class="col-12"><label asp-for="Description" class="form-label"></label><textarea asp-for="Description" class="form-control" rows="2"></textarea></div>
+        <div class="col-md-6"><label asp-for="ParentCategoryId" class="form-label"></label><select asp-for="ParentCategoryId" asp-items="(IEnumerable<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)ViewBag.Parents" class="form-select"><option value="">None (top level)</option></select></div>
+        <div class="col-md-6 d-flex align-items-end"><div class="form-check form-switch"><input asp-for="IsActive" class="form-check-input" /><label asp-for="IsActive" class="form-check-label"></label></div></div>
+        <div class="col-12">
+            <label class="form-label">Icon</label>
+            <div class="d-flex flex-wrap gap-2">
+                @foreach (var ic in icons)
+                {
+                    <input type="radio" class="btn-check" name="Icon" id="@ic" value="@ic" checked="@(Model.Icon == ic)" />
+                    <label class="btn btn-ghost" for="@ic" title="@ic"><i class="bi @ic fs-5"></i></label>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="d-flex gap-2 mt-4"><button class="btn btn-primary" type="submit">Save category</button><a class="btn btn-ghost" asp-action="Index">Cancel</a></div>
+</form>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

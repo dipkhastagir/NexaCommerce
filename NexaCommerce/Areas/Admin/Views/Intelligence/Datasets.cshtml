@@ -1,0 +1,24 @@
+@model List<DatasetInfo>
+@{ ViewData["Title"] = "Research datasets"; }
+<div class="page-head"><div><div class="crumbs"><a asp-action="Index">Intelligence</a> / Datasets</div><h1>Research datasets</h1><div class="sub">Analysis-ready CSV exports. Customer identities are replaced with stable pseudonyms (C#####) so files can be shared for research.</div></div></div>
+<div class="row g-3">
+    @foreach (var d in Model)
+    {
+        <div class="col-md-6">
+            <div class="panel h-100 d-flex flex-column">
+                <div class="d-flex justify-content-between align-items-start"><b class="fs-5 display-font">@d.Title</b><span class="pill st-default">@d.Rows.ToString("N0") rows</span></div>
+                <p class="text-muted small mt-1">@d.Description</p>
+                <div class="small mb-3"><span class="text-muted">Columns:</span> <code>@d.Columns</code></div>
+                <a class="btn btn-primary btn-sm mt-auto align-self-start" asp-action="Download" asp-route-id="@d.Key"><i class="bi bi-download me-1"></i>Download CSV</a>
+            </div>
+        </div>
+    }
+</div>
+<div class="panel mt-3">
+    <div class="panel-title">Loading in Python</div>
+<pre class="code-block mb-0">import pandas as pd
+orders = pd.read_csv("nexacommerce-orders-YYYYMMDD.csv", parse_dates=["created_at"])
+demand = pd.read_csv("nexacommerce-daily-demand-YYYYMMDD.csv", parse_dates=["date"])
+panel = demand.pivot(index="date", columns="sku", values="units")   # one column per product
+print(orders.groupby("risk_level")["total"].describe())</pre>
+</div>

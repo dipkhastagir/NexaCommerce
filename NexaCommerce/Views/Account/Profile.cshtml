@@ -1,0 +1,25 @@
+@model ProfileVm
+@{ ViewData["Title"] = "Profile"; }
+<div class="container py-3">
+    <div class="row g-4">
+        <div class="col-lg-3"><partial name="_AccountNav" /></div>
+        <div class="col-lg-9">
+            <h1 class="h3 mb-3">Profile</h1>
+            <div class="row g-3 mb-3">
+                <div class="col-md-4"><div class="stat violet"><div class="lbl">Member since</div><div class="val fs-5">@Fmt.Date(Model.CreatedAt)</div></div></div>
+                <div class="col-md-4"><div class="stat mint"><div class="lbl">Orders</div><div class="val">@Model.OrderCount</div></div></div>
+                <div class="col-md-4"><div class="stat"><div class="lbl">Total spent</div><div class="val">@Fmt.Money(Model.TotalSpent)</div></div></div>
+            </div>
+            <form asp-action="Profile" method="post" class="panel">
+                <div class="row g-3">
+                    <div class="col-md-6"><label asp-for="FullName" class="form-label"></label><input asp-for="FullName" class="form-control" /><span asp-validation-for="FullName"></span></div>
+                    <div class="col-md-6"><label asp-for="Phone" class="form-label"></label><input asp-for="Phone" class="form-control" /><span asp-validation-for="Phone"></span></div>
+                    <div class="col-md-6"><label class="form-label">E-mail</label><input class="form-control" value="@Model.Email" disabled /></div>
+                    <div class="col-md-6"><label class="form-label">Account type</label><input class="form-control" value="@Model.RoleName" disabled /></div>
+                </div>
+                <button class="btn btn-primary mt-3" type="submit">Save profile</button>
+            </form>
+        </div>
+    </div>
+</div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

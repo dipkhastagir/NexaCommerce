@@ -1,0 +1,32 @@
+@model List<User>
+@{ ViewData["Title"] = "Users"; var roles = (List<Role>)ViewBag.Roles; string role = ViewBag.Role; }
+<div class="page-head">
+    <div><h1>Users &amp; roles</h1><div class="sub">Staff accounts and customers. Passwords are stored as salted PBKDF2 hashes.</div></div>
+    <div class="d-flex gap-2"><a class="btn btn-ghost btn-sm" asp-action="Roles"><i class="bi bi-grid-3x3 me-1"></i>Permission matrix</a><a class="btn btn-primary btn-sm" asp-action="Create"><i class="bi bi-person-plus me-1"></i>New user</a></div>
+</div>
+<div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+    <div class="tab-links mb-0">
+        <a asp-action="Index" class="@(string.IsNullOrEmpty(role) ? "active" : "")">Everyone</a>
+        @foreach (var r in roles) { <a asp-action="Index" asp-route-role="@r.Name" class="@(role == r.Name ? "active" : "")">@r.Name (@r.UserCount)</a> }
+    </div>
+    <form method="get" class="ms-auto d-flex gap-2"><input type="hidden" name="role" value="@role" /><input class="form-control form-control-sm" name="q" value="@ViewBag.Q" placeholder="Search name or e-mail" /><button class="btn btn-ink btn-sm" type="submit">Search</button></form>
+</div>
+<div class="table-wrap"><div class="table-scroll">
+    <table class="table-nx">
+        <thead><tr><th>User</th><th>Role</th><th>Phone</th><th>Created</th><th>Last sign-in</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+            @foreach (var u in Model)
+            {
+                <tr>
+                    <td><b>@u.FullName</b><div class="small text-muted">@u.Email</div></td>
+                    <td><span class="pill @(u.RoleName == "Admin" ? "st-processing" : u.RoleName == "Customer" ? "st-default" : "st-confirmed")">@u.RoleName</span></td>
+                    <td class="small">@u.Phone</td>
+                    <td class="small">@Fmt.Date(u.CreatedAt)</td>
+                    <td class="small">@(u.LastLoginAt.HasValue ? Fmt.Ago(u.LastLoginAt.Value) : "Never")</td>
+                    <td>@if (u.IsActive) { <span class="pill st-delivered">Active</span> } else { <span class="pill st-cancelled">Disabled</span> }</td>
+                    <td class="text-end"><a class="btn btn-ghost btn-sm" asp-action="Edit" asp-route-id="@u.UserId"><i class="bi bi-pencil"></i></a></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div></div>

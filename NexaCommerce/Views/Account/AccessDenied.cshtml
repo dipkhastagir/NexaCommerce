@@ -1,0 +1,10 @@
+@{ ViewData["Title"] = "Access denied"; }
+<div class="container py-5 text-center" style="max-width:560px">
+    <i class="bi bi-shield-lock" style="font-size:3rem;color:var(--violet)"></i>
+    <h1 class="h3 mt-2">This area needs a different role.</h1>
+    <p class="text-muted">You're signed in as <b>@User.GetEmail()</b> (@User.GetRole()). Ask an administrator for access, or sign in with another account.</p>
+    <div class="d-flex justify-content-center gap-2">
+        <a class="btn btn-primary" asp-controller="Home" asp-action="Index">Back to the store</a>
+        <form asp-action="Logout" method="post"><button class="btn btn-ghost" type="submit">Switch account</button></form>
+    </div>
+</div>

@@ -1,0 +1,40 @@
+@model Product
+<div class="p-card">
+    <a asp-controller="Shop" asp-action="Details" asp-route-id="@Model.ProductId" class="p-art" style="background:@Visual.Tint(Model.CategoryId); color:@Visual.Ink(Model.CategoryId)" aria-label="@Model.Name">
+        <i class="bi @Model.CategoryIcon"></i>
+        @if (Model.OnSale)
+        {
+            <span class="tag">-@Model.DiscountPercent%</span>
+        }
+        <span class="sku">@Model.Sku</span>
+    </a>
+    <div class="p-body">
+        <span class="cat">@Model.CategoryName@(string.IsNullOrEmpty(Model.BrandName) ? "" : " / " + Model.BrandName)</span>
+        <a class="name" asp-controller="Shop" asp-action="Details" asp-route-id="@Model.ProductId">@Model.Name</a>
+        @if (Model.ReviewCount > 0)
+        {
+            <span class="stars" title="@Model.AvgRating.ToString("0.0") out of 5">@for (var i = 1; i <= 5; i++)
+                {
+                    <i class="bi @(i <= Math.Round(Model.AvgRating) ? "bi-star-fill" : "bi-star")"></i>
+                }<span class="text-muted ms-1">(@Model.ReviewCount)</span></span>
+        }
+        <div class="mt-auto pt-1 d-flex align-items-end justify-content-between gap-2">
+            <div>
+                <span class="price">@Fmt.Money(Model.EffectivePrice)</span>
+                @if (Model.OnSale)
+                {
+                    <span class="price-old">@Fmt.Money(Model.Price)</span>
+                }
+                <div class="stock-line @Badge.Stock(Model.StockStatus)">@(Model.StockQuantity == 0 ? "Out of stock" : Model.StockQuantity <= Model.ReorderLevel ? $"Only {Model.StockQuantity} left" : "In stock")</div>
+            </div>
+            @if (Model.StockQuantity > 0)
+            {
+                <form asp-controller="Cart" asp-action="Add" method="post">
+                    <input type="hidden" name="productId" value="@Model.ProductId" />
+                    <input type="hidden" name="returnUrl" value="@(Context.Request.Path + Context.Request.QueryString)" />
+                    <button class="btn btn-primary btn-sm" type="submit" aria-label="Add @Model.Name to cart"><i class="bi bi-bag-plus"></i></button>
+                </form>
+            }
+        </div>
+    </div>
+</div>

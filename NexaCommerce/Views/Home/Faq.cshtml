@@ -1,0 +1,30 @@
+@{
+    ViewData["Title"] = "FAQ";
+    var faqs = new[]
+    {
+        ("How long does delivery take?", "Inside Dhaka, 1-2 working days. Other cities usually take 2-4 working days. You can follow every step from My orders."),
+        ("Which payment methods do you accept?", "Cash on delivery, bKash and card. In this build bKash and card payments go through a simulated gateway: any number works except one ending in 0000, which is declined so you can test failures."),
+        ("Can I cancel an order?", "Yes, while it is still Pending or Confirmed. Open the order under My orders and choose Cancel order. Online payments are refunded automatically."),
+        ("What is your return policy?", "Delivered orders can be returned within 30 days. Open the order and choose Request a return; our team reviews requests within two working days."),
+        ("Why does a product say only a few left?", "Stock counts are live. When a product drops to its reorder level we show it so you can decide quickly, and our system raises a restock recommendation."),
+        ("How are the 'bought together' suggestions chosen?", "They come from real order history. We only show a pairing when customers buy the two items together noticeably more often than chance (lift above 1)."),
+        ("Do you have coupon codes?", "New customers can use WELCOME10 for 10% off. FLAT500 takes Tk 500 off orders above Tk 5,000.")
+    };
+}
+<div class="container py-4" style="max-width:820px">
+    <h1 class="mb-4">Frequently asked questions</h1>
+    <div class="accordion" id="faq">
+        @for (var i = 0; i < faqs.Length; i++)
+        {
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button @(i == 0 ? "" : "collapsed") fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#q@(i)">@faqs[i].Item1</button>
+                </h2>
+                <div id="q@(i)" class="accordion-collapse collapse @(i == 0 ? "show" : "")" data-bs-parent="#faq">
+                    <div class="accordion-body">@faqs[i].Item2</div>
+                </div>
+            </div>
+        }
+    </div>
+    <p class="mt-4 text-muted">Still need help? <a asp-action="Contact">Send us a message</a>.</p>
+</div>

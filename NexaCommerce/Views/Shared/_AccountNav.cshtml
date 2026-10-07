@@ -1,0 +1,15 @@
+@{
+    var action = ViewContext.RouteData.Values["action"]?.ToString();
+    var controller = ViewContext.RouteData.Values["controller"]?.ToString();
+}
+<div class="panel panel-tight acct-nav">
+    <div class="d-flex align-items-center gap-2 px-2 pb-3">
+        <div class="mini-thumb fw-bold" style="background:var(--violet-soft);color:var(--violet-deep)">@Visual.Initials(User.GetFullName())</div>
+        <div class="lh-sm"><b>@User.GetFullName()</b><br /><small class="text-muted">@User.GetEmail()</small></div>
+    </div>
+    <a asp-controller="MyOrders" asp-action="Index" class="@(controller == "MyOrders" ? "active" : "")"><i class="bi bi-receipt"></i>Orders</a>
+    <a asp-controller="Wishlist" asp-action="Index" class="@(controller == "Wishlist" ? "active" : "")"><i class="bi bi-heart"></i>Wishlist</a>
+    <a asp-controller="Account" asp-action="Profile" class="@(action == "Profile" ? "active" : "")"><i class="bi bi-person"></i>Profile</a>
+    <a asp-controller="Account" asp-action="Addresses" class="@(action == "Addresses" || action == "AddressForm" ? "active" : "")"><i class="bi bi-geo-alt"></i>Addresses</a>
+    <a asp-controller="Account" asp-action="ChangePassword" class="@(action == "ChangePassword" ? "active" : "")"><i class="bi bi-shield-lock"></i>Password</a>
+</div>

@@ -1,0 +1,46 @@
+@model ShopVm
+@{
+    ViewData["Title"] = Model.Heading;
+    var sorts = new[] { ("newest", "Newest"), ("popular", "Best selling"), ("price_asc", "Price: low to high"), ("price_desc", "Price: high to low"), ("rating", "Top rated"), ("name", "Name") };
+}
+<div class="container py-3">
+    <div class="d-flex justify-content-between align-items-end flex-wrap gap-2 mb-3">
+        <div>
+            <div class="crumbs"><a asp-controller="Home" asp-action="Index">Home</a> / Shop</div>
+            <h1 class="h2 mb-0">@Model.Heading</h1>
+            @if (Model.CurrentCategory?.Description != null)
+            {
+                <p class="text-muted mb-0">@Model.CurrentCategory.Description</p>
+            }
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <label class="small text-muted" for="sortSel">Sort</label>
+            <select id="sortSel" class="form-select form-select-sm" style="width:auto" onchange="location.href=this.value">
+                @foreach (var s in sorts)
+                {
+                    <option value="@QueryHelper.With(Context.Request, "sort", s.Item1)" selected="@(Model.Sort == s.Item1)">@s.Item2</option>
+                }
+            </select>
+        </div>
+    </div>
+    <div class="row g-4">
+        <div class="col-lg-3"><partial name="_ShopFilters" model="Model" /></div>
+        <div class="col-lg-9">
+            @if (!Model.Products.Items.Any())
+            {
+                <div class="panel empty"><i class="bi bi-search"></i>No products match these filters.<br /><a asp-action="Index" class="btn btn-ghost btn-sm mt-3">Clear filters</a></div>
+            }
+            else
+            {
+                <p class="small text-muted mb-2">@Model.Products.TotalCount products</p>
+                <div class="row g-3">
+                    @foreach (var p in Model.Products.Items)
+                    {
+                        <div class="col-6 col-md-4"><partial name="_ProductCard" model="p" /></div>
+                    }
+                </div>
+                <partial name="_Pagination" model="@((Model.Products.Page, Model.Products.TotalPages, Model.Products.TotalCount))" />
+            }
+        </div>
+    </div>
+</div>

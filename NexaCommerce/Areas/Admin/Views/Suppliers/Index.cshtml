@@ -1,0 +1,21 @@
+@model List<Supplier>
+@{ ViewData["Title"] = "Suppliers"; }
+<div class="page-head"><div><h1>Suppliers</h1><div class="sub">Lead times here drive safety stock and reorder points in the Reorder planner.</div></div><a class="btn btn-primary btn-sm" asp-action="Create"><i class="bi bi-plus-lg me-1"></i>New supplier</a></div>
+<div class="table-wrap"><div class="table-scroll">
+    <table class="table-nx">
+        <thead><tr><th>Supplier</th><th>Contact</th><th>Phone</th><th class="text-end">Lead time</th><th class="text-end">Products</th><th>Status</th></tr></thead>
+        <tbody>
+            @foreach (var s in Model)
+            {
+                <tr>
+                    <td><a asp-action="Details" asp-route-id="@s.SupplierId" class="fw-bold">@s.Name</a><div class="small text-muted">@s.Address</div></td>
+                    <td class="small">@s.ContactPerson<div class="text-muted">@s.Email</div></td>
+                    <td class="small">@s.Phone</td>
+                    <td class="text-end tabular">@s.LeadTimeDays days</td>
+                    <td class="text-end tabular">@s.ProductCount</td>
+                    <td>@if (s.IsActive) { <span class="pill st-delivered">Active</span> } else { <span class="pill st-default">Inactive</span> }</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div></div>

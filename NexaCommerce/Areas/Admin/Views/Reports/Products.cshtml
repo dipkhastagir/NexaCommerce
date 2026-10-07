@@ -1,0 +1,13 @@
+@model List<Product>
+@{ ViewData["Title"] = "Product performance"; }
+<div class="page-head"><div><div class="crumbs"><a asp-action="Index">Reports</a> / Products</div><h1>Product performance</h1><div class="sub">All-time units sold from vw_ProductList.</div></div><button class="btn btn-ghost btn-sm" onclick="window.print()"><i class="bi bi-printer me-1"></i>Print</button></div>
+<div class="table-wrap"><div class="table-scroll"><table class="table-nx">
+    <thead><tr><th>#</th><th>Product</th><th>Category</th><th class="text-end">Units sold</th><th class="text-end">Revenue (est.)</th><th class="text-end">Margin</th><th class="text-end">Rating</th><th class="text-end">Stock</th></tr></thead>
+    <tbody>
+        @for (var i = 0; i < Model.Count; i++)
+        {
+            var p = Model[i];
+            <tr><td>@(i + 1)</td><td><a asp-controller="Products" asp-action="Details" asp-route-id="@p.ProductId" class="fw-semibold">@p.Name</a></td><td class="small">@p.CategoryName</td><td class="text-end tabular">@p.UnitsSold</td><td class="text-end tabular">@Fmt.Money(p.UnitsSold * p.EffectivePrice)</td><td class="text-end tabular">@p.MarginPercent%</td><td class="text-end tabular">@(p.ReviewCount > 0 ? p.AvgRating.ToString("0.0") : "-")</td><td class="text-end tabular @Badge.Stock(p.StockStatus)">@p.StockQuantity</td></tr>
+        }
+    </tbody>
+</table></div></div>

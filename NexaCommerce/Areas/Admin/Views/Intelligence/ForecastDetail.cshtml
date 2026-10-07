@@ -1,0 +1,50 @@
+@model ForecastResult
+@{
+    ViewData["Title"] = "Forecast: " + Model.Name;
+    var js = new System.Text.Json.JsonSerializerOptions();
+    var labels = Model.History.Select(h => h.Date.ToString("dd MMM")).Concat(Model.Forecast.Select(f => f.Date.ToString("dd MMM")));
+    var hist = Model.History.Select(h => (double?)h.Units).Concat(Model.Forecast.Select(_ => (double?)null));
+    var fit = Model.Fitted.Select(h => (double?)Math.Round(h.Units, 2)).Concat(Model.Forecast.Select(_ => (double?)null));
+    var pad = Model.History.Select(_ => (double?)null).ToList();
+    var fc = pad.Concat(Model.Forecast.Select(f => (double?)Math.Round(f.Units, 2)));
+    var lo = pad.Concat(Model.Lower.Select(f => (double?)Math.Round(f.Units, 2)));
+    var hi = pad.Concat(Model.Upper.Select(f => (double?)Math.Round(f.Units, 2)));
+    string J(object o) => System.Text.Json.JsonSerializer.Serialize(o, js);
+}
+<div class="page-head">
+    <div><div class="crumbs"><a asp-action="Index">Intelligence</a> / <a asp-action="Forecast">Forecast</a> / @Model.Sku</div><h1>@Model.Name</h1><div class="sub">Holt's linear exponential smoothing &middot; &alpha; = @Fmt.Num(Model.Alpha), &beta; = @Fmt.Num(Model.Beta)</div></div>
+    <a class="btn btn-ghost btn-sm" asp-controller="Products" asp-action="Details" asp-route-id="@Model.ProductId">Product page</a>
+</div>
+<div class="row g-3 mb-3">
+    <div class="col-md-3"><div class="stat violet"><div class="lbl">Forecast, next @Model.Forecast.Count days</div><div class="val">@Fmt.Num(Model.ForecastTotal, 0) units</div></div></div>
+    <div class="col-md-3"><div class="stat"><div class="lbl">Hold-out MAE / RMSE</div><div class="val">@Fmt.Num(Model.Mae) / @Fmt.Num(Model.Rmse)</div><div class="meta">sMAPE @Fmt.Pct(Model.Smape)</div></div></div>
+    <div class="col-md-3"><div class="stat mint"><div class="lbl">Error vs naive forecast</div><div class="val">@(Model.NaiveMae > 0 ? Fmt.Num(Model.SkillRatio) : "-")</div><div class="meta">Naive MAE @Fmt.Num(Model.NaiveMae). Below 1 means the model is better.</div></div></div>
+    <div class="col-md-3"><div class="stat coral"><div class="lbl">Stock-out</div><div class="val">@(Model.DaysUntilStockout.HasValue ? "~" + Model.DaysUntilStockout + " days" : "Not expected")</div><div class="meta">@Model.StockQuantity on hand</div></div></div>
+</div>
+<div class="panel mb-3">
+    <div class="panel-title">History, fitted values and forecast with 95% interval</div>
+    <div class="chart-box tall"><canvas id="fc"></canvas></div>
+</div>
+<div class="panel">
+    <div class="panel-title">How this forecast is produced</div>
+    <div class="formula mb-2">&#8467;<sub>t</sub> = &alpha; y<sub>t</sub> + (1 &minus; &alpha;)(&#8467;<sub>t&minus;1</sub> + b<sub>t&minus;1</sub>) &nbsp;&nbsp; b<sub>t</sub> = &beta;(&#8467;<sub>t</sub> &minus; &#8467;<sub>t&minus;1</sub>) + (1 &minus; &beta;) b<sub>t&minus;1</sub> &nbsp;&nbsp; &#375;<sub>t+h</sub> = &#8467;<sub>t</sub> + h b<sub>t</sub></div>
+    <p class="small text-muted mb-0">&alpha; and &beta; are chosen by grid search to minimise one-step-ahead squared error on the training window; the last 14 days are held out to report MAE, RMSE and sMAPE before refitting on the full series. Final level @Fmt.Num(Model.Level), trend @Fmt.Num(Model.Trend, 3) units/day.</p>
+</div>
+@section Scripts {
+<script>
+    new Chart(document.getElementById('fc'), {
+        type: 'line',
+        data: {
+            labels: @Html.Raw(J(labels)),
+            datasets: [
+                { label: 'Upper 95%', data: @Html.Raw(J(hi)), borderColor: 'transparent', backgroundColor: 'rgba(91,61,245,.12)', pointRadius: 0, fill: '+1' },
+                { label: 'Lower 95%', data: @Html.Raw(J(lo)), borderColor: 'transparent', pointRadius: 0, fill: false },
+                { label: 'Actual', data: @Html.Raw(J(hist)), borderColor: '#17153B', backgroundColor: '#17153B', pointRadius: 1.5, borderWidth: 1, showLine: false },
+                { label: 'Fitted', data: @Html.Raw(J(fit)), borderColor: '#E8A33D', pointRadius: 0, borderWidth: 1.5, tension: .2 },
+                { label: 'Forecast', data: @Html.Raw(J(fc)), borderColor: '#5B3DF5', pointRadius: 0, borderWidth: 2, borderDash: [6, 4] }
+            ]
+        },
+        options: { interaction: { mode: 'index', intersect: false }, scales: { x: { grid: { display: false }, ticks: { maxTicksLimit: 12 } }, y: { beginAtZero: true } } }
+    });
+</script>
+}

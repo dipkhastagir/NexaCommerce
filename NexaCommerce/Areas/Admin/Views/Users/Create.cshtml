@@ -1,0 +1,8 @@
+@model UserFormVm
+@{ ViewData["Title"] = "New user"; }
+<div class="page-head"><div><div class="crumbs"><a asp-action="Index">Users</a> / New</div><h1>New user</h1></div></div>
+<form asp-action="Create" method="post" class="panel" style="max-width:820px">
+    <partial name="_UserForm" model="Model" />
+    <div class="d-flex gap-2 mt-3"><button class="btn btn-primary" type="submit">Create user</button><a class="btn btn-ghost" asp-action="Index">Cancel</a></div>
+</form>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

@@ -1,0 +1,73 @@
+@model Order
+@{
+    ViewData["Title"] = "Order " + Model.OrderNumber;
+    var returns = (List<ReturnRequest>)ViewBag.Returns;
+}
+<div class="container py-3">
+    <div class="row g-4">
+        <div class="col-lg-3"><partial name="_AccountNav" /></div>
+        <div class="col-lg-9">
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+                <div>
+                    <div class="crumbs"><a asp-action="Index">My orders</a> / @Model.OrderNumber</div>
+                    <h1 class="h3 mb-0">Order @Model.OrderNumber <span class="pill @Badge.OrderStatus(Model.Status) fs-6 align-middle">@Model.Status</span></h1>
+                    <div class="small text-muted">Placed @Fmt.Stamp(Model.CreatedAt)</div>
+                </div>
+                <div class="d-flex gap-2 flex-wrap">
+                    <a class="btn btn-ghost btn-sm" asp-action="Track" asp-route-id="@Model.OrderId"><i class="bi bi-truck me-1"></i>Track</a>
+                    <a class="btn btn-ghost btn-sm" asp-action="Invoice" asp-route-id="@Model.OrderId" target="_blank"><i class="bi bi-printer me-1"></i>Invoice</a>
+                    @if (Model.Status is "Pending" or "Confirmed")
+                    {
+                        <form asp-action="Cancel" method="post" data-confirm="Cancel this order?"><input type="hidden" name="id" value="@Model.OrderId" /><button class="btn btn-ghost btn-sm text-danger" type="submit">Cancel order</button></form>
+                    }
+                    @if (Model.Status == "Delivered" && !returns.Any(r => r.Status is "Requested" or "Approved"))
+                    {
+                        <a class="btn btn-ghost btn-sm" asp-action="Return" asp-route-id="@Model.OrderId"><i class="bi bi-arrow-counterclockwise me-1"></i>Request a return</a>
+                    }
+                </div>
+            </div>
+            <div class="panel mb-3">
+                @foreach (var i in Model.Items)
+                {
+                    <div class="line-item">
+                        <span class="thumb" style="background:@Visual.Tint(i.ProductId);color:@Visual.Ink(i.ProductId)"><i class="bi @i.CategoryIcon"></i></span>
+                        <div class="flex-grow-1"><a class="fw-bold text-body" asp-controller="Shop" asp-action="Details" asp-route-id="@i.ProductId">@i.ProductName</a><div class="small text-muted">@i.Quantity &times; @Fmt.Money(i.UnitPrice)</div></div>
+                        @if (Model.Status == "Delivered")
+                        {
+                            <a class="btn btn-link btn-sm" asp-action="Review" asp-route-productId="@i.ProductId">Review</a>
+                        }
+                        <b class="tabular">@Fmt.Money(i.LineTotal)</b>
+                    </div>
+                }
+                <div class="ms-auto" style="max-width:320px">
+                    <div class="summary-row"><span>Subtotal</span><span>@Fmt.Money(Model.SubTotal)</span></div>
+                    @if (Model.DiscountAmount > 0)
+                    {
+                        <div class="summary-row"><span>Discount (@Model.CouponCode)</span><span class="text-success">- @Fmt.Money(Model.DiscountAmount)</span></div>
+                    }
+                    <div class="summary-row"><span>Delivery</span><span>@(Model.ShippingFee == 0 ? "Free" : Fmt.Money(Model.ShippingFee))</span></div>
+                    <div class="summary-row total"><span>Total</span><span>@Fmt.Money(Model.TotalAmount)</span></div>
+                </div>
+            </div>
+            <div class="row g-3">
+                <div class="col-md-6"><div class="panel h-100"><h2 class="panel-title">Delivery</h2><p class="mb-0">@Model.ShipName<br />@Model.ShipPhone<br />@Model.ShipAddress, @Model.ShipCity</p>@if (!string.IsNullOrEmpty(Model.Notes)) { <p class="small text-muted mt-2 mb-0">Note: @Model.Notes</p> }</div></div>
+                <div class="col-md-6"><div class="panel h-100"><h2 class="panel-title">Payment</h2><p class="mb-1">@Model.PaymentMethod <span class="pill @Badge.Payment(Model.PaymentStatus) ms-1">@Model.PaymentStatus</span></p>
+                    @foreach (var p in Model.Payments)
+                    {
+                        <div class="small text-muted">@Fmt.Money(p.Amount) &middot; @p.Status @(p.TransactionRef != null ? "· " + p.TransactionRef : "")</div>
+                    }
+                </div></div>
+            </div>
+            @if (returns.Any())
+            {
+                <div class="panel mt-3">
+                    <h2 class="panel-title">Returns</h2>
+                    @foreach (var r in returns)
+                    {
+                        <div class="mb-2"><span class="pill @Badge.Generic(r.Status)">@r.Status</span> <span class="small text-muted ms-1">@Fmt.Date(r.CreatedAt)</span><div>@r.Reason</div>@if (!string.IsNullOrEmpty(r.AdminNote)) { <div class="small text-muted">Response: @r.AdminNote</div> }</div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>

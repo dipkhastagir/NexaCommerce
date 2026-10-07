@@ -1,0 +1,22 @@
+@model List<Brand>
+@{ ViewData["Title"] = "Brands"; }
+<div class="page-head"><div><h1>Brands</h1><div class="sub">Shoppers can filter the catalog by brand.</div></div><a class="btn btn-primary btn-sm" asp-action="Create"><i class="bi bi-plus-lg me-1"></i>New brand</a></div>
+<div class="row g-3">
+    @foreach (var b in Model)
+    {
+        <div class="col-md-6 col-xl-4">
+            <div class="panel h-100 d-flex flex-column">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <span class="mini-thumb fw-bold" style="background:@Visual.Tint(b.BrandId);color:@Visual.Ink(b.BrandId)">@Visual.Initials(b.Name)</span>
+                    <div class="lh-sm"><b>@b.Name</b><div class="small text-muted">@b.ProductCount products</div></div>
+                    @if (!b.IsActive) { <span class="pill st-default ms-auto">Hidden</span> }
+                </div>
+                <p class="small text-muted flex-grow-1">@b.Description</p>
+                <div class="d-flex gap-2">
+                    <a class="btn btn-ghost btn-sm" asp-action="Edit" asp-route-id="@b.BrandId">Edit</a>
+                    <form asp-action="Delete" method="post" data-confirm="Delete @b.Name?"><input type="hidden" name="id" value="@b.BrandId" /><button class="btn btn-ghost btn-sm text-danger" type="submit" disabled="@(b.ProductCount > 0)">Delete</button></form>
+                </div>
+            </div>
+        </div>
+    }
+</div>

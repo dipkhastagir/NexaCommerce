@@ -1,0 +1,113 @@
+@model CheckoutVm
+@{ ViewData["Title"] = "Checkout"; }
+<div class="container py-3">
+    <h1 class="h2 mb-3">Checkout</h1>
+    <form asp-action="Index" method="post" id="checkoutForm">
+        <div asp-validation-summary="ModelOnly" class="flash flash-error mb-3"></div>
+        <div class="row g-4">
+            <div class="col-lg-7">
+                <div class="panel mb-3">
+                    <h2 class="panel-title">Delivery address</h2>
+                    @if (Model.Addresses.Any())
+                    {
+                        <div class="row g-2 mb-3">
+                            @foreach (var a in Model.Addresses)
+                            {
+                                <div class="col-md-6">
+                                    <label class="addr-option">
+                                        <input class="form-check-input me-2" type="radio" name="AddressId" value="@a.AddressId" checked="@(Model.AddressId == a.AddressId)"
+                                               data-name="@a.RecipientName" data-phone="@a.Phone" data-line="@a.Line1" data-city="@a.City" />
+                                        <b>@a.Label</b>@if (a.IsDefault) { <span class="pill st-default ms-1">Default</span> }
+                                        <div class="small text-muted mt-1">@a.RecipientName, @a.Line1, @a.City</div>
+                                    </label>
+                                </div>
+                            }
+                        </div>
+                    }
+                    <div class="row g-3">
+                        <div class="col-md-6"><label asp-for="ShipName" class="form-label"></label><input asp-for="ShipName" class="form-control" /><span asp-validation-for="ShipName"></span></div>
+                        <div class="col-md-6"><label asp-for="ShipPhone" class="form-label"></label><input asp-for="ShipPhone" class="form-control" /><span asp-validation-for="ShipPhone"></span></div>
+                        <div class="col-md-8"><label asp-for="ShipAddress" class="form-label"></label><input asp-for="ShipAddress" class="form-control" /><span asp-validation-for="ShipAddress"></span></div>
+                        <div class="col-md-4"><label asp-for="ShipCity" class="form-label"></label><input asp-for="ShipCity" class="form-control" list="cities" /><span asp-validation-for="ShipCity"></span></div>
+                        <div class="col-12"><label asp-for="Notes" class="form-label"></label><input asp-for="Notes" class="form-control" placeholder="Landmark, preferred time..." /></div>
+                        <div class="col-12 form-check ms-2"><input asp-for="SaveAddress" class="form-check-input" /><label asp-for="SaveAddress" class="form-check-label">Save this address for next time</label></div>
+                    </div>
+                    <datalist id="cities"><option value="Dhaka"></option><option value="Chattogram"></option><option value="Sylhet"></option><option value="Khulna"></option><option value="Rajshahi"></option><option value="Gazipur"></option><option value="Narayanganj"></option><option value="Cumilla"></option></datalist>
+                </div>
+                <div class="panel">
+                    <h2 class="panel-title">Payment</h2>
+                    <div class="row g-2">
+                        <div class="col-md-4"><label class="pay-option"><input class="form-check-input" type="radio" name="PaymentMethod" value="COD" checked="@(Model.PaymentMethod == "COD")" /><i class="bi bi-cash-stack"></i><span><b>Cash</b><br /><small class="text-muted">on delivery</small></span></label></div>
+                        <div class="col-md-4"><label class="pay-option"><input class="form-check-input" type="radio" name="PaymentMethod" value="bKash" checked="@(Model.PaymentMethod == "bKash")" /><i class="bi bi-phone"></i><span><b>bKash</b><br /><small class="text-muted">mobile wallet</small></span></label></div>
+                        <div class="col-md-4"><label class="pay-option"><input class="form-check-input" type="radio" name="PaymentMethod" value="Card" checked="@(Model.PaymentMethod == "Card")" /><i class="bi bi-credit-card"></i><span><b>Card</b><br /><small class="text-muted">Visa / Mastercard</small></span></label></div>
+                    </div>
+                    <span asp-validation-for="PaymentMethod"></span>
+                    <div id="accountBox" class="mt-3" style="display:none">
+                        <label asp-for="PaymentAccount" class="form-label"></label>
+                        <input asp-for="PaymentAccount" class="form-control" placeholder="e.g. 01712345678 or 4111 1111 1111 1111" autocomplete="off" />
+                        <div class="small text-muted mt-1"><i class="bi bi-info-circle me-1"></i>Simulated gateway: any number is approved except one ending in 0000.</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-5">
+                <div class="panel">
+                    <h2 class="panel-title">Your order</h2>
+                    @foreach (var i in Model.Cart.Items)
+                    {
+                        <div class="d-flex justify-content-between small py-1"><span>@i.Quantity &times; @i.Name</span><span class="tabular">@Fmt.Money(i.LineTotal)</span></div>
+                    }
+                    <div class="divider"></div>
+                    <label asp-for="CouponCode" class="form-label"></label>
+                    <div class="input-group">
+                        <input asp-for="CouponCode" class="form-control text-uppercase" placeholder="WELCOME10" />
+                        <button class="btn btn-ghost" type="button" id="applyCoupon">Apply</button>
+                    </div>
+                    <span asp-validation-for="CouponCode"></span>
+                    <div id="couponMsg" class="small mt-1"></div>
+                    <div class="summary-row mt-2"><span>Subtotal</span><span class="tabular">@Fmt.Money(Model.Cart.SubTotal)</span></div>
+                    <div class="summary-row" id="discountRow" style="display:none"><span>Discount</span><span class="tabular text-success" id="discountVal"></span></div>
+                    <div class="summary-row"><span>Delivery</span><span class="tabular">@(Model.Cart.EffectiveShipping == 0 ? "Free" : Fmt.Money(Model.Cart.EffectiveShipping))</span></div>
+                    <div class="summary-row total"><span>Total</span><span class="tabular" id="totalVal">@Fmt.Money(Model.Cart.Total)</span></div>
+                    <button class="btn btn-primary w-100 mt-3 py-2" type="submit"><i class="bi bi-lock me-1"></i>Place order</button>
+                    <p class="small text-muted mt-2 mb-0">Stock is reserved the moment you place the order.</p>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            const form = document.getElementById('checkoutForm');
+            const box = document.getElementById('accountBox');
+            function syncPay() {
+                const v = form.querySelector('input[name="PaymentMethod"]:checked');
+                box.style.display = v && v.value !== 'COD' ? 'block' : 'none';
+            }
+            form.querySelectorAll('input[name="PaymentMethod"]').forEach(r => r.addEventListener('change', syncPay));
+            syncPay();
+
+            form.querySelectorAll('input[name="AddressId"]').forEach(r => r.addEventListener('change', function () {
+                form.querySelector('#ShipName').value = this.dataset.name;
+                form.querySelector('#ShipPhone').value = this.dataset.phone;
+                form.querySelector('#ShipAddress').value = this.dataset.line;
+                form.querySelector('#ShipCity').value = this.dataset.city;
+            }));
+
+            document.getElementById('applyCoupon').addEventListener('click', async function () {
+                const code = document.getElementById('CouponCode').value.trim();
+                const token = form.querySelector('input[name="__RequestVerificationToken"]').value;
+                const body = new URLSearchParams({ code: code, __RequestVerificationToken: token });
+                const res = await fetch('@Url.Action("ApplyCoupon")', { method: 'POST', body: body });
+                const data = await res.json();
+                const msg = document.getElementById('couponMsg');
+                msg.textContent = data.message;
+                msg.className = 'small mt-1 ' + (data.ok ? 'text-success' : 'text-danger');
+                document.getElementById('discountRow').style.display = data.ok ? 'flex' : 'none';
+                document.getElementById('discountVal').textContent = '- ' + data.discountText;
+                document.getElementById('totalVal').textContent = data.totalText;
+            });
+        })();
+    </script>
+}

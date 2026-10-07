@@ -1,0 +1,32 @@
+@model List<Address>
+@{ ViewData["Title"] = "Addresses"; }
+<div class="container py-3">
+    <div class="row g-4">
+        <div class="col-lg-3"><partial name="_AccountNav" /></div>
+        <div class="col-lg-9">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h1 class="h3 mb-0">Addresses</h1>
+                <a class="btn btn-primary btn-sm" asp-action="AddressForm"><i class="bi bi-plus-lg me-1"></i>Add address</a>
+            </div>
+            @if (!Model.Any())
+            {
+                <div class="panel empty"><i class="bi bi-geo-alt"></i>No saved addresses. Add one to speed up checkout.</div>
+            }
+            <div class="row g-3">
+                @foreach (var a in Model)
+                {
+                    <div class="col-md-6">
+                        <div class="panel h-100">
+                            <div class="d-flex justify-content-between"><b>@a.Label</b>@if (a.IsDefault) { <span class="pill st-processing">Default</span> }</div>
+                            <p class="mb-3 mt-2">@a.RecipientName<br />@a.Line1<br />@a.City @a.PostalCode<br /><span class="text-muted">@a.Phone</span></p>
+                            <div class="d-flex gap-2">
+                                <a class="btn btn-ghost btn-sm" asp-action="AddressForm" asp-route-id="@a.AddressId">Edit</a>
+                                <form asp-action="DeleteAddress" method="post" data-confirm="Delete this address?"><input type="hidden" name="id" value="@a.AddressId" /><button class="btn btn-ghost btn-sm text-danger" type="submit">Delete</button></form>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

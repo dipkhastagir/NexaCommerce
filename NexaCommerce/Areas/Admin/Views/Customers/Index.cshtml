@@ -1,0 +1,28 @@
+@model PagedResult<CustomerSummary>
+@{ ViewData["Title"] = "Customers"; string sort = ViewBag.Sort; }
+<div class="page-head"><div><h1>Customers</h1><div class="sub">@Model.TotalCount registered shoppers</div></div><a class="btn btn-ghost btn-sm" asp-controller="Intelligence" asp-action="Segments"><i class="bi bi-pie-chart me-1"></i>RFM segments</a></div>
+<form method="get" class="filter-bar row g-2">
+    <div class="col-md-7"><input class="form-control" name="q" value="@ViewBag.Q" placeholder="Name, e-mail or phone" /></div>
+    <div class="col-md-3"><select class="form-select" name="sort">@foreach (var s in new[] { ("spent", "Top spenders"), ("orders", "Most orders"), ("recent", "Recently active"), ("name", "Name") }) { <option value="@s.Item1" selected="@(sort == s.Item1)">@s.Item2</option> }</select></div>
+    <div class="col-md-2"><button class="btn btn-ink w-100" type="submit">Search</button></div>
+</form>
+<div class="table-wrap"><div class="table-scroll">
+    <table class="table-nx">
+        <thead><tr><th>Customer</th><th>Phone</th><th>Joined</th><th>Last order</th><th class="text-end">Orders</th><th class="text-end">Spent</th><th>Status</th></tr></thead>
+        <tbody>
+            @foreach (var c in Model.Items)
+            {
+                <tr>
+                    <td><div class="d-flex align-items-center gap-2"><span class="mini-thumb fw-bold small" style="background:@Visual.Tint(c.UserId);color:@Visual.Ink(c.UserId)">@Visual.Initials(c.FullName)</span><div class="lh-sm"><a asp-action="Details" asp-route-id="@c.UserId" class="fw-bold text-body">@c.FullName</a><div class="small text-muted">@c.Email</div></div></div></td>
+                    <td class="small">@c.Phone</td>
+                    <td class="small">@Fmt.Date(c.CreatedAt)</td>
+                    <td class="small">@(c.LastOrderDate.HasValue ? Fmt.Ago(c.LastOrderDate.Value) : "Never")</td>
+                    <td class="text-end tabular">@c.OrderCount</td>
+                    <td class="text-end tabular fw-semibold">@Fmt.Money(c.TotalSpent)</td>
+                    <td>@if (c.IsActive) { <span class="pill st-delivered">Active</span> } else { <span class="pill st-cancelled">Blocked</span> }</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div></div>
+<partial name="_Pagination" model="@((Model.Page, Model.TotalPages, Model.TotalCount))" />

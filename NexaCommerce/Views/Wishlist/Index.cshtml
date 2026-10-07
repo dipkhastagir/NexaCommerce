@@ -1,0 +1,23 @@
+@model List<Product>
+@{ ViewData["Title"] = "Wishlist"; }
+<div class="container py-3">
+    <div class="row g-4">
+        <div class="col-lg-3"><partial name="_AccountNav" /></div>
+        <div class="col-lg-9">
+            <h1 class="h3 mb-3">Wishlist</h1>
+            @if (!Model.Any())
+            {
+                <div class="panel empty"><i class="bi bi-heart"></i>Nothing saved yet. Tap Save on any product to keep it here.</div>
+            }
+            <div class="row g-3">
+                @foreach (var p in Model)
+                {
+                    <div class="col-6 col-md-4">
+                        <partial name="_ProductCard" model="p" />
+                        <form asp-action="Toggle" method="post" class="mt-1"><input type="hidden" name="productId" value="@p.ProductId" /><button class="btn btn-link btn-sm text-muted" type="submit"><i class="bi bi-x me-1"></i>Remove</button></form>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

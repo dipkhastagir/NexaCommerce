@@ -1,0 +1,54 @@
+@model List<OrderRiskRow>
+@{
+    ViewData["Title"] = "Order risk";
+    string level = ViewBag.Level;
+    var dist = (List<(int Bucket, int Count)>)ViewBag.Distribution;
+    var dl = System.Text.Json.JsonSerializer.Serialize(dist.Select(d => d.Bucket + "-" + (d.Bucket + 9)));
+    var dv = System.Text.Json.JsonSerializer.Serialize(dist.Select(d => d.Count));
+}
+<div class="page-head">
+    <div><div class="crumbs"><a asp-action="Index">Intelligence</a> / Risk</div><h1>Order risk</h1><div class="sub">Transparent rule-based scoring: each signal adds points and a written reason. Thresholds live in Settings.</div></div>
+    <form asp-action="RescoreAll" method="post" data-confirm="Re-score every order with the current thresholds?"><button class="btn btn-ghost btn-sm" type="submit"><i class="bi bi-arrow-repeat me-1"></i>Re-score all orders</button></form>
+</div>
+<div class="row g-3 mb-3">
+    <div class="col-xl-5"><div class="panel h-100"><div class="panel-title">Score distribution (all orders)</div><div class="chart-box"><canvas id="dist"></canvas></div></div></div>
+    <div class="col-xl-7">
+        <div class="panel h-100">
+            <div class="panel-title">Signals</div>
+            <table class="table-nx small">
+                <tbody>
+                    <tr><td>Account created the same day / under a week</td><td class="text-end">+20 / +10</td></tr>
+                    <tr><td>Order over 3&times; the customer's own average (2+ prior orders)</td><td class="text-end">+25</td></tr>
+                    <tr><td>Large first order (above mean + 2&sigma;)</td><td class="text-end">+15</td></tr>
+                    <tr><td>Order value z-score above 2 / above 3</td><td class="text-end">+12 / +25</td></tr>
+                    <tr><td>5+ / 8+ units of one item</td><td class="text-end">+15 / +25</td></tr>
+                    <tr><td>3+ orders within 24 hours</td><td class="text-end">+20</td></tr>
+                    <tr><td>Ship-to city differs from default address</td><td class="text-end">+8</td></tr>
+                    <tr><td>High-value cash on delivery</td><td class="text-end">+10</td></tr>
+                    <tr><td>Coupon used on a first order</td><td class="text-end">+5</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<div class="tab-links">
+    <a asp-action="Risk" class="@(string.IsNullOrEmpty(level) ? "active" : "")">High + medium</a>
+    <a asp-action="Risk" asp-route-level="High" class="@(level == "High" ? "active" : "")">High</a>
+    <a asp-action="Risk" asp-route-level="Medium" class="@(level == "Medium" ? "active" : "")">Medium</a>
+</div>
+<div class="table-wrap"><div class="table-scroll"><table class="table-nx">
+    <thead><tr><th>Order</th><th>Customer</th><th>Placed</th><th>Status</th><th class="text-end">Total</th><th>Score</th><th>Why</th></tr></thead>
+    <tbody>
+        @foreach (var o in Model)
+        {
+            <tr><td><a asp-controller="Orders" asp-action="Details" asp-route-id="@o.OrderId" class="fw-bold">@o.OrderNumber</a></td><td>@o.CustomerName</td><td class="small">@Fmt.Date(o.CreatedAt)</td><td><span class="pill @Badge.OrderStatus(o.Status)">@o.Status</span></td><td class="text-end tabular">@Fmt.Money(o.TotalAmount)</td><td><span class="pill @Badge.Risk(o.RiskLevel)">@o.RiskScore</span></td><td class="small text-muted" style="max-width:420px">@o.RiskReasons</td></tr>
+        }
+    </tbody>
+</table>
+@if (!Model.Any()) { <div class="empty"><i class="bi bi-shield-check"></i>No flagged orders.</div> }
+</div></div>
+@section Scripts {
+<script>
+    new Chart(document.getElementById('dist'), { type: 'bar', data: { labels: @Html.Raw(dl), datasets: [{ data: @Html.Raw(dv), backgroundColor: '#5B3DF5', borderRadius: 4 }] }, options: { plugins: { legend: { display: false } }, scales: { x: { title: { display: true, text: 'Risk score' } }, y: { type: 'logarithmic', title: { display: true, text: 'Orders (log)' } } } } });
+</script>
+}

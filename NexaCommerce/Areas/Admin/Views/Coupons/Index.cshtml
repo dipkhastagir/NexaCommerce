@@ -1,0 +1,28 @@
+@model List<Coupon>
+@{ ViewData["Title"] = "Coupons"; var usage = (Dictionary<string, (int Orders, decimal Discount)>)ViewBag.Usage; }
+<div class="page-head"><div><h1>Coupons</h1><div class="sub">Validated at checkout inside the order stored procedure, so limits hold even under concurrent orders.</div></div><a class="btn btn-primary btn-sm" asp-action="Form"><i class="bi bi-plus-lg me-1"></i>New coupon</a></div>
+<div class="table-wrap"><div class="table-scroll">
+    <table class="table-nx">
+        <thead><tr><th>Code</th><th>Discount</th><th class="text-end">Min order</th><th>Validity</th><th class="text-end">Used</th><th class="text-end">Orders</th><th class="text-end">Discount given</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+            @foreach (var c in Model)
+            {
+                var u = usage.TryGetValue(c.Code, out var x) ? x : (0, 0m);
+                <tr>
+                    <td><b>@c.Code</b><div class="small text-muted">@c.Description</div></td>
+                    <td>@(c.DiscountType == "Percent" ? c.Value.ToString("0.#") + "%" : Fmt.Money(c.Value))</td>
+                    <td class="text-end tabular">@Fmt.Money(c.MinOrderAmount)</td>
+                    <td class="small">@Fmt.Date(c.StartsAt) - @Fmt.Date(c.EndsAt)</td>
+                    <td class="text-end tabular">@c.UsedCount@(c.MaxUses.HasValue ? " / " + c.MaxUses : "")</td>
+                    <td class="text-end tabular">@u.Item1</td>
+                    <td class="text-end tabular">@Fmt.Money(u.Item2)</td>
+                    <td>@if (c.IsCurrentlyValid) { <span class="pill st-delivered">Live</span> } else { <span class="pill st-default">Off</span> }</td>
+                    <td class="text-end text-nowrap">
+                        <a class="btn btn-ghost btn-sm" asp-action="Form" asp-route-id="@c.CouponId"><i class="bi bi-pencil"></i></a>
+                        <form asp-action="Delete" method="post" class="d-inline" data-confirm="Delete coupon @c.Code?"><input type="hidden" name="id" value="@c.CouponId" /><button class="btn btn-ghost btn-sm text-danger" type="submit"><i class="bi bi-trash"></i></button></form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div></div>

@@ -1,0 +1,44 @@
+@model IntelligenceHubVm
+@{ ViewData["Title"] = "Intelligence"; }
+<div class="page-head">
+    <div><h1>Intelligence</h1><div class="sub">Decision support computed live from the transaction database. Every model is explainable and documented in <a asp-action="Methodology">Methodology</a>.</div></div>
+    <a class="btn btn-ghost btn-sm" asp-action="Datasets"><i class="bi bi-database-down me-1"></i>Export research datasets</a>
+</div>
+<div class="row g-3 mb-4">
+    <div class="col-md-6 col-xl-4"><a class="intel-card" asp-action="Forecast"><span class="ic"><i class="bi bi-graph-up-arrow"></i></span><span class="big">@Model.ProductsForecast</span><b>Demand forecasts</b><p>Holt exponential smoothing per product. Median error ratio vs. naive baseline: <b>@Fmt.Num(Model.MedianSkill)</b> (below 1 beats naive).</p></a></div>
+    <div class="col-md-6 col-xl-4"><a class="intel-card" asp-action="Reorder"><span class="ic"><i class="bi bi-arrow-repeat"></i></span><span class="big">@Model.ReorderNow <small class="fs-6 text-muted">now</small> &middot; @Model.ReorderSoon <small class="fs-6 text-muted">soon</small></span><b>Reorder planner</b><p>Safety stock, reorder point and EOQ from demand variability and supplier lead time.</p></a></div>
+    <div class="col-md-6 col-xl-4"><a class="intel-card" asp-action="Segments"><span class="ic"><i class="bi bi-pie-chart"></i></span><span class="big">@Model.Champions <small class="fs-6 text-muted">champions</small></span><b>Customer segments</b><p>RFM quintile scoring. @Model.AtRisk valuable customers are drifting away.</p></a></div>
+    <div class="col-md-6 col-xl-4"><a class="intel-card" asp-action="Basket"><span class="ic"><i class="bi bi-diagram-3"></i></span><span class="big">@Model.RulesFound</span><b>Basket rules</b><p>Association rules with support, confidence and lift. Strongest lift: <b>@Model.BestLift.ToString("0.0")&times;</b>.</p></a></div>
+    <div class="col-md-6 col-xl-4"><a class="intel-card" asp-action="Abc"><span class="ic"><i class="bi bi-bar-chart-steps"></i></span><span class="big">@Model.ClassA <small class="fs-6 text-muted">class A</small></span><b>ABC analysis</b><p>These products bring in @Fmt.Pct(Model.ClassARevenueShare, 0) of 90-day revenue.</p></a></div>
+    <div class="col-md-6 col-xl-4"><a class="intel-card" asp-action="Risk"><span class="ic"><i class="bi bi-shield-exclamation"></i></span><span class="big">@Model.HighRisk <small class="fs-6 text-muted">high</small> &middot; @Model.MediumRisk <small class="fs-6 text-muted">medium</small></span><b>Order risk</b><p>Rule-based, explainable risk scores with the reason for every point.</p></a></div>
+</div>
+<div class="row g-3">
+    <div class="col-xl-7">
+        <div class="table-wrap">
+            <div class="d-flex justify-content-between p-3 pb-2"><b>Reorder these first</b><a class="small" asp-action="Reorder">Full planner</a></div>
+            <table class="table-nx">
+                <thead><tr><th>Product</th><th class="text-end">On hand</th><th class="text-end">Days of cover</th><th class="text-end">Suggested qty</th><th>Urgency</th></tr></thead>
+                <tbody>
+                    @foreach (var r in Model.UrgentReorders)
+                    {
+                        <tr><td><a asp-controller="Products" asp-action="Details" asp-route-id="@r.ProductId" class="fw-semibold">@r.Name</a><div class="small text-muted">@r.SupplierName</div></td><td class="text-end tabular">@r.StockQuantity</td><td class="text-end tabular">@(r.DaysOfCover >= 999 ? "-" : r.DaysOfCover.ToString("0.0"))</td><td class="text-end tabular fw-bold">@r.SuggestedQty</td><td><span class="pill @(r.UrgencyRank <= 1 ? "st-cancelled" : "st-pending")">@r.Urgency</span></td></tr>
+                    }
+                </tbody>
+            </table>
+            @if (!Model.UrgentReorders.Any()) { <div class="empty py-3">Nothing needs reordering.</div> }
+        </div>
+    </div>
+    <div class="col-xl-5">
+        <div class="panel">
+            <div class="panel-title">Revenue by segment</div>
+            @{ var maxSeg = Model.Segments.Count > 0 ? Model.Segments.Max(s => s.Revenue) : 1; }
+            @foreach (var s in Model.Segments)
+            {
+                <div class="mb-2">
+                    <div class="d-flex justify-content-between small"><a asp-action="Segments" asp-route-segment="@s.Segment" class="fw-semibold text-body">@s.Segment <span class="text-muted fw-normal">(@s.Customers)</span></a><span class="tabular">@Fmt.MoneyShort(s.Revenue)</span></div>
+                    <div class="meter mt-1"><span style="width:@((int)(100 * s.Revenue / (maxSeg == 0 ? 1 : maxSeg)))%;background:@s.Color"></span></div>
+                </div>
+            }
+        </div>
+    </div>
+</div>

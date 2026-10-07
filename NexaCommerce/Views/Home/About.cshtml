@@ -1,0 +1,15 @@
+@{ ViewData["Title"] = "About"; }
+<div class="container py-4" style="max-width:820px">
+    <h1 class="mb-3">About NexaCommerce</h1>
+    <p class="lead">NexaCommerce is an inventory-aware online store and back office built as an extension of the e-commerce management foundation developed during an internship at Best Business Bond Ltd. (3BL).</p>
+    <p>The original foundation covered authentication, product and category management, inventory tracking, dashboard statistics and a REST API. This version completes the customer side &mdash; cart, checkout, payments, order tracking, reviews and returns &mdash; and adds a decision-support layer that turns everyday transactions into recommendations.</p>
+    <h2 class="h4 mt-4">What makes it different</h2>
+    <div class="row g-3 mt-1">
+        <div class="col-md-6"><div class="panel h-100"><h3 class="h6"><i class="bi bi-graph-up-arrow me-2 text-primary"></i>Forecast-driven restocking</h3><p class="mb-0 text-muted">Holt exponential smoothing predicts each product's demand; reorder points and order quantities follow from it.</p></div></div>
+        <div class="col-md-6"><div class="panel h-100"><h3 class="h6"><i class="bi bi-diagram-3 me-2 text-primary"></i>Basket intelligence</h3><p class="mb-0 text-muted">Association rules (support, confidence, lift) power the "bought together" suggestions you see on product and cart pages.</p></div></div>
+        <div class="col-md-6"><div class="panel h-100"><h3 class="h6"><i class="bi bi-people me-2 text-primary"></i>Customer segments</h3><p class="mb-0 text-muted">RFM scoring groups customers by how recently, how often and how much they buy.</p></div></div>
+        <div class="col-md-6"><div class="panel h-100"><h3 class="h6"><i class="bi bi-shield-check me-2 text-primary"></i>Explainable risk checks</h3><p class="mb-0 text-muted">Every order gets a transparent risk score with the reasons spelled out for staff.</p></div></div>
+    </div>
+    <h2 class="h4 mt-4">Technology</h2>
+    <p>ASP.NET Core 8 MVC with Razor views, Dapper over Microsoft SQL Server, stored procedures and views for business rules and reporting, cookie authentication with PBKDF2 password hashing, role-based authorisation and a JSON REST API that shares the same service layer as the web interface.</p>
+</div>

@@ -1,0 +1,26 @@
+@model InventoryReportVm
+@{
+    ViewData["Title"] = "Inventory valuation";
+    var l = System.Text.Json.JsonSerializer.Serialize(Model.ValueByCategory.Select(v => v.Label));
+    var v2 = System.Text.Json.JsonSerializer.Serialize(Model.ValueByCategory.Select(v => v.Value));
+}
+<div class="page-head"><div><div class="crumbs"><a asp-action="Index">Reports</a> / Inventory</div><h1>Inventory valuation</h1><div class="sub">As of @Fmt.Stamp(DateTime.Now)</div></div><button class="btn btn-ghost btn-sm" onclick="window.print()"><i class="bi bi-printer me-1"></i>Print</button></div>
+<div class="row g-3 mb-3">
+    <div class="col-md-4"><div class="stat violet"><div class="lbl">Value at cost</div><div class="val">@Fmt.Money(Model.TotalCostValue)</div></div></div>
+    <div class="col-md-4"><div class="stat mint"><div class="lbl">Value at selling price</div><div class="val">@Fmt.Money(Model.TotalRetailValue)</div><div class="meta">Potential gross profit @Fmt.Money(Model.TotalRetailValue - Model.TotalCostValue)</div></div></div>
+    <div class="col-md-4"><div class="stat"><div class="lbl">Units on hand</div><div class="val">@Model.TotalUnits.ToString("N0")</div></div></div>
+</div>
+<div class="row g-3">
+    <div class="col-xl-4"><div class="panel"><div class="panel-title">Cost value by category</div><div class="chart-box tall"><canvas id="cat"></canvas></div></div></div>
+    <div class="col-xl-8">
+        <div class="table-wrap"><div class="table-scroll"><table class="table-nx">
+            <thead><tr><th>Product</th><th>Category</th><th class="text-end">Units</th><th class="text-end">Unit cost</th><th class="text-end">Cost value</th><th class="text-end">Retail value</th></tr></thead>
+            <tbody>@foreach (var p in Model.Products.OrderByDescending(p => p.StockQuantity * p.CostPrice)) { <tr><td>@p.Name <span class="small text-muted">@p.Sku</span></td><td class="small">@p.CategoryName</td><td class="text-end tabular">@p.StockQuantity</td><td class="text-end tabular">@Fmt.Money(p.CostPrice)</td><td class="text-end tabular fw-semibold">@Fmt.Money(p.StockQuantity * p.CostPrice)</td><td class="text-end tabular">@Fmt.Money(p.StockQuantity * p.EffectivePrice)</td></tr> }</tbody>
+        </table></div></div>
+    </div>
+</div>
+@section Scripts {
+<script>
+    new Chart(document.getElementById('cat'), { type: 'bar', data: { labels: @Html.Raw(l), datasets: [{ data: @Html.Raw(v2), backgroundColor: '#5B3DF5', borderRadius: 4 }] }, options: { indexAxis: 'y', plugins: { legend: { display: false } } } });
+</script>
+}

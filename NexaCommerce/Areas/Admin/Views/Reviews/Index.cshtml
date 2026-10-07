@@ -1,0 +1,25 @@
+@model PagedResult<Review>
+@{ ViewData["Title"] = "Reviews"; string status = ViewBag.Status; }
+<div class="page-head"><div><h1>Reviews</h1><div class="sub">Only verified buyers can review. New reviews wait here until approved.</div></div></div>
+<div class="tab-links">
+    @foreach (var t in new[] { ("pending", "Awaiting approval"), ("approved", "Published"), ("all", "All") }) { <a asp-action="Index" asp-route-status="@t.Item1" class="@(status == t.Item1 ? "active" : "")">@t.Item2</a> }
+</div>
+@if (!Model.Items.Any()) { <div class="panel empty"><i class="bi bi-chat-square"></i>Nothing to review here.</div> }
+@foreach (var r in Model.Items)
+{
+    <div class="panel mb-2">
+        <div class="d-flex justify-content-between flex-wrap gap-2">
+            <div>
+                <span class="stars">@for (var i = 1; i <= 5; i++) { <i class="bi @(i <= r.Rating ? "bi-star-fill" : "bi-star")"></i> }</span>
+                <b class="ms-2">@r.Title</b>
+                <div class="small text-muted">@r.UserName on <a asp-controller="Products" asp-action="Details" asp-route-id="@r.ProductId">@r.ProductName</a> &middot; @Fmt.Ago(r.CreatedAt)</div>
+            </div>
+            <div class="d-flex gap-2">
+                <form asp-action="Approve" method="post"><input type="hidden" name="id" value="@r.ReviewId" /><input type="hidden" name="approved" value="@((!r.IsApproved).ToString())" /><input type="hidden" name="status" value="@status" /><button class="btn btn-sm @(r.IsApproved ? "btn-ghost" : "btn-primary")" type="submit">@(r.IsApproved ? "Unpublish" : "Approve")</button></form>
+                <form asp-action="Delete" method="post" data-confirm="Delete this review?"><input type="hidden" name="id" value="@r.ReviewId" /><input type="hidden" name="status" value="@status" /><button class="btn btn-ghost btn-sm text-danger" type="submit"><i class="bi bi-trash"></i></button></form>
+            </div>
+        </div>
+        <p class="mb-0 mt-2">@r.Comment</p>
+    </div>
+}
+<partial name="_Pagination" model="@((Model.Page, Model.TotalPages, Model.TotalCount))" />

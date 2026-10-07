@@ -1,0 +1,40 @@
+@model PagedResult<Order>
+@{
+    ViewData["Title"] = "Orders";
+    DateTime? from = ViewBag.From; DateTime? to = ViewBag.To;
+}
+<div class="page-head">
+    <div><h1>Orders</h1><div class="sub">@Model.TotalCount orders match</div></div>
+    <a class="btn btn-ghost btn-sm" href="@Url.Action("Export", new { status = ViewBag.Status, from, to })"><i class="bi bi-download me-1"></i>Export CSV</a>
+</div>
+<form method="get" class="filter-bar row g-2">
+    <div class="col-lg-3"><input class="form-control" name="q" value="@ViewBag.Q" placeholder="Order no., customer, phone" /></div>
+    <div class="col-lg-2"><select class="form-select" name="status"><option value="">Any status</option>@foreach (var s in NexaCommerce.Services.OrderService.Statuses) { <option value="@s" selected="@(ViewBag.Status == s)">@s</option> }</select></div>
+    <div class="col-lg-2"><select class="form-select" name="risk"><option value="">Any risk</option>@foreach (var r in new[] { "High", "Medium", "Low" }) { <option value="@r" selected="@(ViewBag.Risk == r)">@r risk</option> }</select></div>
+    <div class="col-lg-1"><select class="form-select" name="payment"><option value="">Pay</option>@foreach (var p in new[] { "COD", "bKash", "Card" }) { <option value="@p" selected="@(ViewBag.Payment == p)">@p</option> }</select></div>
+    <div class="col-lg-3 d-flex gap-1"><input class="form-control" type="date" name="from" value="@(from?.ToString("yyyy-MM-dd"))" aria-label="From" /><input class="form-control" type="date" name="to" value="@(to?.ToString("yyyy-MM-dd"))" aria-label="To" /></div>
+    <div class="col-lg-1"><button class="btn btn-ink w-100" type="submit">Go</button></div>
+</form>
+<div class="table-wrap"><div class="table-scroll">
+    <table class="table-nx">
+        <thead><tr><th>Order</th><th>Placed</th><th>Customer</th><th class="text-end">Items</th><th>Payment</th><th>Status</th><th>Risk</th><th class="text-end">Total</th></tr></thead>
+        <tbody>
+            @foreach (var o in Model.Items)
+            {
+                <tr>
+                    <td><a asp-action="Details" asp-route-id="@o.OrderId" class="fw-bold">@o.OrderNumber</a></td>
+                    <td class="small text-nowrap">@Fmt.Stamp(o.CreatedAt)</td>
+                    <td>@o.CustomerName<div class="small text-muted">@o.ShipCity</div></td>
+                    <td class="text-end">@o.ItemCount</td>
+                    <td class="small">@o.PaymentMethod <span class="pill @Badge.Payment(o.PaymentStatus) ms-1">@o.PaymentStatus</span></td>
+                    <td><span class="pill @Badge.OrderStatus(o.Status)">@o.Status</span></td>
+                    <td><span class="pill @Badge.Risk(o.RiskLevel)" title="@o.RiskReasons">@o.RiskScore</span></td>
+                    <td class="text-end tabular fw-semibold">@Fmt.Money(o.TotalAmount)</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+@if (!Model.Items.Any()) { <div class="empty"><i class="bi bi-receipt"></i>No orders match these filters.</div> }
+</div>
+<partial name="_Pagination" model="@((Model.Page, Model.TotalPages, Model.TotalCount))" />

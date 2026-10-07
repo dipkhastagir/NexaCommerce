@@ -1,0 +1,47 @@
+@model List<ReorderSuggestion>
+@{ ViewData["Title"] = "Reorder planner"; var bySupplier = Model.Where(r => r.SuggestedQty > 0 && r.SupplierId.HasValue).GroupBy(r => (r.SupplierId.Value, r.SupplierName)).ToList(); }
+<div class="page-head">
+    <div><div class="crumbs"><a asp-action="Index">Intelligence</a> / Reorder</div><h1>Reorder planner</h1><div class="sub">Based on 60 days of demand, supplier lead times and the service level, ordering cost and holding cost in Settings.</div></div>
+</div>
+@if (bySupplier.Any())
+{
+    <div class="row g-3 mb-3">
+        @foreach (var g in bySupplier)
+        {
+            <div class="col-md-6 col-xl-4">
+                <div class="panel">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div><b>@g.Key.SupplierName</b><div class="small text-muted">@g.Count() products &middot; @Fmt.Money(g.Sum(x => x.SuggestedQty * x.CostPrice))</div></div>
+                        <a class="btn btn-primary btn-sm" asp-controller="PurchaseOrders" asp-action="Create" asp-route-supplierId="@g.Key.Value" asp-route-fromReorder="true">Draft PO</a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+<div class="table-wrap"><div class="table-scroll"><table class="table-nx">
+    <thead><tr><th>Product</th><th class="text-end">On hand</th><th class="text-end">&mu; / day</th><th class="text-end">&sigma; / day</th><th class="text-end">Lead time</th><th class="text-end">Safety stock</th><th class="text-end">Reorder point</th><th class="text-end">EOQ</th><th class="text-end">Days of cover</th><th class="text-end">Order qty</th><th>Status</th></tr></thead>
+    <tbody>
+        @foreach (var r in Model)
+        {
+            <tr>
+                <td><a asp-controller="Products" asp-action="Details" asp-route-id="@r.ProductId" class="fw-semibold">@r.Name</a><div class="small text-muted">@r.Sku &middot; @r.SupplierName</div></td>
+                <td class="text-end tabular fw-bold">@r.StockQuantity</td>
+                <td class="text-end tabular small">@Fmt.Num(r.AvgDailyDemand)</td>
+                <td class="text-end tabular small">@Fmt.Num(r.StdDailyDemand)</td>
+                <td class="text-end tabular small">@r.LeadTimeDays d</td>
+                <td class="text-end tabular small">@Fmt.Num(r.SafetyStock, 1)</td>
+                <td class="text-end tabular">@Fmt.Num(r.ReorderPoint, 1)<div class="small text-muted">set: @r.ReorderLevel</div></td>
+                <td class="text-end tabular small">@Fmt.Num(r.Eoq, 0)</td>
+                <td class="text-end tabular">@(r.DaysOfCover >= 999 ? "-" : r.DaysOfCover.ToString("0.0"))</td>
+                <td class="text-end tabular fw-bold">@(r.SuggestedQty > 0 ? r.SuggestedQty.ToString() : "-")</td>
+                <td><span class="pill @(r.UrgencyRank <= 1 ? "st-cancelled" : r.UrgencyRank == 2 ? "st-pending" : "st-delivered")">@r.Urgency</span></td>
+            </tr>
+        }
+    </tbody>
+</table></div></div>
+<div class="panel mt-3">
+    <div class="panel-title">Formulas</div>
+    <div class="formula">SS = z &middot; &sigma;<sub>d</sub> &middot; &radic;L &nbsp;&nbsp;&nbsp; ROP = &mu;<sub>d</sub> &middot; L + SS &nbsp;&nbsp;&nbsp; EOQ = &radic;(2DS / H)</div>
+    <p class="small text-muted mt-2 mb-0">Stock already on open purchase orders counts toward the inventory position. Suggested quantity is the larger of EOQ and the amount needed to bring the position back above ROP + SS.</p>
+</div>

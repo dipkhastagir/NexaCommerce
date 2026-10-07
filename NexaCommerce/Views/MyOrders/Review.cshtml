@@ -1,0 +1,20 @@
+@model WriteReviewVm
+@{ ViewData["Title"] = "Review " + Model.ProductName; }
+<div class="container py-3" style="max-width:720px">
+    <h1 class="h3 mb-3">Review @Model.ProductName</h1>
+    <form asp-action="Review" method="post" class="panel">
+        <input type="hidden" asp-for="ProductId" /><input type="hidden" asp-for="ProductName" />
+        <label class="form-label">Your rating</label>
+        <div class="d-flex gap-2 mb-3">
+            @for (var i = 1; i <= 5; i++)
+            {
+                <input type="radio" class="btn-check" name="Rating" id="r@(i)" value="@i" checked="@(Model.Rating == i)" />
+                <label class="btn btn-ghost" for="r@(i)">@i <i class="bi bi-star-fill text-warning"></i></label>
+            }
+        </div>
+        <div class="mb-3"><label asp-for="Title" class="form-label"></label><input asp-for="Title" class="form-control" placeholder="Sum it up in a few words" /><span asp-validation-for="Title"></span></div>
+        <div class="mb-3"><label asp-for="Comment" class="form-label"></label><textarea asp-for="Comment" class="form-control" rows="5"></textarea><span asp-validation-for="Comment"></span></div>
+        <button class="btn btn-primary" type="submit">Submit review</button>
+    </form>
+</div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

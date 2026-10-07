@@ -1,0 +1,19 @@
+@model Coupon
+@{ ViewData["Title"] = Model.CouponId > 0 ? "Edit " + Model.Code : "New coupon"; }
+<div class="page-head"><div><div class="crumbs"><a asp-action="Index">Coupons</a></div><h1>@ViewData["Title"]</h1></div></div>
+<form asp-action="Form" method="post" class="panel" style="max-width:820px">
+    <input type="hidden" asp-for="CouponId" /><input type="hidden" asp-for="UsedCount" />
+    <div class="row g-3">
+        <div class="col-md-4"><label asp-for="Code" class="form-label"></label><input asp-for="Code" class="form-control text-uppercase" /><span asp-validation-for="Code"></span></div>
+        <div class="col-md-8"><label asp-for="Description" class="form-label"></label><input asp-for="Description" class="form-control" /></div>
+        <div class="col-md-4"><label asp-for="DiscountType" class="form-label"></label><select asp-for="DiscountType" class="form-select"><option value="Percent">Percentage</option><option value="Fixed">Fixed amount</option></select></div>
+        <div class="col-md-4"><label asp-for="Value" class="form-label"></label><input asp-for="Value" class="form-control" step="0.01" /><span asp-validation-for="Value"></span></div>
+        <div class="col-md-4"><label asp-for="MinOrderAmount" class="form-label"></label><input asp-for="MinOrderAmount" class="form-control" step="0.01" /></div>
+        <div class="col-md-4"><label asp-for="StartsAt" class="form-label"></label><input asp-for="StartsAt" type="date" class="form-control" /></div>
+        <div class="col-md-4"><label asp-for="EndsAt" class="form-label"></label><input asp-for="EndsAt" type="date" class="form-control" /><span asp-validation-for="EndsAt"></span></div>
+        <div class="col-md-4"><label asp-for="MaxUses" class="form-label"></label><input asp-for="MaxUses" class="form-control" placeholder="Unlimited" /></div>
+        <div class="col-12 form-check form-switch ms-2"><input asp-for="IsActive" class="form-check-input" /><label asp-for="IsActive" class="form-check-label"></label></div>
+    </div>
+    <div class="d-flex gap-2 mt-3"><button class="btn btn-primary" type="submit">Save coupon</button><a class="btn btn-ghost" asp-action="Index">Cancel</a></div>
+</form>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }
